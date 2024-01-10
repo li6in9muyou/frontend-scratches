@@ -15,6 +15,11 @@
       font-family: sans-serif;
     }
 
+    main {
+      border: solid #666 2px;
+      width: fit-content;
+    }
+
     nav {
       display: flex;
       gap: 20px;
@@ -23,6 +28,25 @@
     nav>a {
       font-size: 30px;
       padding: 10px;
+    }
+
+    .tab--content {
+      position: relative;
+      height: 100px;
+    }
+
+    .tab--content>p {
+      position: absolute;
+      padding: 10px;
+      visibility: hidden;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      margin: 0;
+    }
+
+    .tab--content>p.tab--content__active {
+      visibility: visible;
     }
 
     nav>a.tab__active {
@@ -38,28 +62,29 @@
       <a href="#">tab 2</a>
       <a href="#">tab3</a>
     </nav>
-    <section class="tab--content"></section>
+    <section class="tab--content">
+      <p class="tab--content__active">tab 1 content</p>
+      <p>tab 2 content</p>
+      <p>tab 3 content</p>
+    </section>
   </main>
   <script>
     var tabs = document.querySelectorAll("nav > a");
-    var tabContent = document.querySelector(".tab--content");
+    var tabPanels = document.querySelectorAll(".tab--content > p");
 
-    function handleTabClick(i) {
+    function handleTabMouseOver(i) {
       tabs.forEach(tab => tab.classList.remove("tab__active"));
       tabs[i].classList.add("tab__active");
-      showTab(i);
-    }
 
-    function showTab(i) {
-      var TAB_CONTENT = ["tab 1 content", "tab 2 content", "tab 3 content"];
-      tabContent.textContent = TAB_CONTENT[i];
+      tabPanels.forEach(p => p.classList.remove("tab--content__active"));
+      tabPanels[i].classList.add("tab--content__active");
     }
 
     tabs.forEach((node, idx) => {
       (function (i) {
-        node.onclick = (e) => {
+        node.onmouseover = (e) => {
           e.preventDefault();
-          handleTabClick(i);
+          handleTabMouseOver(i);
         };
       })(idx);
     });
