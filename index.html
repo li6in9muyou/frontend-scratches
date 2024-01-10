@@ -6,8 +6,16 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>Draft</title>
   <script>
-    var arr = [1, 2, 3, 4, 5, 6, 4, 5, 3, 2, 7];
-    console.log(arr, arr.filter((x, idx, arr) => idx !== arr.lastIndexOf(x)))
+    var arr = new Array(9 * 9).fill().map(_ => Math.random());
+    console.log(arr);
+    console.log(arr.reduce((twoDim, x, idx, orig) => {
+      if (idx % (Math.sqrt(orig.length)) === 0) {
+        twoDim.push([x]);
+      } else {
+        twoDim[twoDim.length - 1].push(x);
+      }
+      return twoDim;
+    }, []))
   </script>
 </head>
 
