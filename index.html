@@ -63,8 +63,14 @@
       return arr.filter((i, idx, array) => idx === indexOfDeepEqual(i, array));
     }
 
+    function uniqueStringify(arr) {
+      var stringified = arr.map(i => JSON.stringify(i, (_, v) => v !== v ? "NaN" : v));
+      return arr.filter((i, idx) => idx === stringified.indexOf(stringified[idx]));
+    }
+
     console.log(unique(arr));
     console.log(uniqueDeepEq(arr));
+    console.log(uniqueStringify(arr));
   </script>
 </head>
 
