@@ -58,9 +58,9 @@
 <body>
   <main>
     <nav>
-      <a class="tab__active" href="#">tab 1</a>
-      <a href="#">tab 2</a>
-      <a href="#">tab3</a>
+      <a data-tab-idx=0 class="tab__active" href="#">tab 1</a>
+      <a data-tab-idx=1 href="#">tab 2</a>
+      <a data-tab-idx=2 href="#">tab3</a>
     </nav>
     <section class="tab--content">
       <p class="tab--content__active">tab 1 content</p>
@@ -69,6 +69,7 @@
     </section>
   </main>
   <script>
+    var nav = document.querySelector("nav");
     var tabs = document.querySelectorAll("nav > a");
     var tabPanels = document.querySelectorAll(".tab--content > p");
 
@@ -80,16 +81,12 @@
       tabPanels[i].classList.add("tab--content__active");
     }
 
-    tabs.forEach((node, idx) => {
-      (function (i) {
-        node.onmouseover = (e) => {
-          e.preventDefault();
-          handleTabMouseOver(i);
-        };
-      })(idx);
-    });
+    nav.onmouseover = (e) => {
+      if (e.target.tagName.toLowerCase() === "a") {
+        handleTabMouseOver(e.target.dataset.tabIdx);
+      }
+    };
 
-    showTab(0);
   </script>
 </body>
 
