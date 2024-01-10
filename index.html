@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Draft</title>
+    <script>
+      var resp = {
+        rows: [
+          ["Alice", 15, "Female", "2000-12-01"],
+          ["Bob", 22, "Male", "1996-01-21"],
+        ],
+        metaData: [
+          { name: "name", note: "" },
+          { name: "age", note: "" },
+          { name: "gender", note: "" },
+          { name: "birthday", note: "" },
+        ],
+      };
+
+      function parseData(resp) {
+        var fields = resp.metaData.map((f) => f.name);
+        return resp.rows.map((row) =>
+          row.reduce(
+            (item, data, idx) => Object.assign(item, { [fields[idx]]: data }),
+            {},
+          ),
+        );
+      }
+
+      console.log(parseData(resp));
+    </script>
+  </head>
+
+  <body></body>
+</html>
