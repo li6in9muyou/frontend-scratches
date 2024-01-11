@@ -63,17 +63,27 @@
     var box = document.querySelector("[data-js-box]");
     var bb = document.querySelector("body");
     var boxDragging = false;
+    var boxPos = {
+      x: getComputedStyle(box).left,
+      y: getComputedStyle(box).top
+    };
 
-    listenEvent(box, "mousedown", function () {
+    listenEvent(box, "mousedown", function (e) {
       box.classList.toggle("box__lifted");
       boxDragging = !boxDragging;
+      boxPos.x = e.clientX;
+      boxPos.y = e.clientY;
     });
 
     listenEvent(bb, "mousemove", function (e) {
       console.log(boxDragging);
       if (boxDragging) {
-        box.style.top = e.clientY + "px";
-        box.style.left = e.clientX + "px";
+        var posDiff = {
+          x: e.clientX - boxPos.x,
+          y: e.clientY - boxPos.y
+        };
+        box.style.top = boxPos.y + posDiff.y + "px";
+        box.style.left = boxPos.x + posDiff.x + "px";
       }
     }, { passive: true });
 
