@@ -64,26 +64,25 @@
     var bb = document.querySelector("body");
     var boxDragging = false;
     var boxPos = {
-      x: getComputedStyle(box).left,
-      y: getComputedStyle(box).top
+      x: parseFloat(getComputedStyle(box).left),
+      y: parseFloat(getComputedStyle(box).top)
     };
 
     listenEvent(box, "mousedown", function (e) {
       box.classList.toggle("box__lifted");
       boxDragging = !boxDragging;
-      boxPos.x = e.clientX;
-      boxPos.y = e.clientY;
     });
 
     listenEvent(bb, "mousemove", function (e) {
-      console.log(boxDragging);
       if (boxDragging) {
         var posDiff = {
           x: e.clientX - boxPos.x,
           y: e.clientY - boxPos.y
         };
-        box.style.top = boxPos.y + posDiff.y + "px";
-        box.style.left = boxPos.x + posDiff.x + "px";
+        boxPos.x += posDiff.x;
+        boxPos.y += posDiff.y;
+        box.style.top = boxPos.y + "px";
+        box.style.left = boxPos.x + "px";
       }
     }, { passive: true });
 
