@@ -10,92 +10,39 @@
       font-family: sans-serif;
     }
 
-    .banner>ul {
-      display: flex;
-      gap: 40px;
-      font-size: 30px;
-      padding: 0;
+    input {
+      width: 6em;
+      font-size: 40px;
+      margin: 20px;
+      outline-offset: 3px;
+      outline: none;
+      outline-style: solid;
+      outline-width: 6px;
     }
 
-    .banner>ul>li {
-      list-style: none;
-      padding: 12px;
-      border: solid 2px black;
-      user-select: none;
-      cursor: pointer;
+    .input__invalid {
+      outline-color: red;
     }
 
-    li.btn__active {
-      background-color: #888;
-      color: #fff;
+
+    .input__valid {
+      outline-color: green;
     }
   </style>
 </head>
 
 <body>
-  <section class="banner">
-    <ul>
-      <li class="btn__active">1</li>
-      <li>2</li>
-      <li>3</li>
-      <li>4</li>
-    </ul>
-    <img src="img/p1.jpg" alt="banner image" width="500" height="375">
-  </section>
+  <input type="text" name="id" id="inputId" placeholder="长度6-10" class="input__invalid">
   <script>
-    function nodeIndexOf(node) {
-      var silibings = node.parentNode.children;
-      for (var i = 0; i < silibings.length; i++) {
-        if (node === silibings[i]) {
-          return i;
-        }
+    document.querySelector("input#inputId").oninput = function (e) {
+      var textLen = e.target.value.trimEnd().length;
+      if (6 <= textLen && textLen <= 10) {
+        e.target.classList.remove("input__invalid");
+        e.target.classList.add("input__valid");
+      } else {
+        e.target.classList.remove("input__valid");
+        e.target.classList.add("input__invalid");
       }
-      return -1;
-    }
-
-    var IMAGES = [
-      {
-        src: "img/p1.jpg",
-        width: "500",
-        height: "375"
-      },
-      {
-        src: "img/p2.jpg",
-        width: "500",
-        height: "310"
-      },
-      {
-        src: "img/p3.jpg",
-        width: "533",
-        height: "300"
-      },
-      {
-        src: "img/p4.jpg",
-        width: "533",
-        height: "300"
-      },
-    ];
-
-    var oSlider = document.querySelector(".banner>ul");
-    var aBtns = document.querySelectorAll(".banner>ul>li");
-    var oImg = document.querySelector(".banner>img");
-
-    oSlider.onmouseover = function (e) {
-      if (e.target.tagName.toLowerCase() === "li") {
-        var idx = nodeIndexOf(e.target);
-        showImg(idx);
-        hightlightBtn(idx);
-      }
-    };
-
-    function showImg(i) {
-      var img = IMAGES[i];
-      Object.assign(oImg, img);
-    }
-
-    function hightlightBtn(i) {
-      aBtns.forEach(btn => btn.classList.remove("btn__active"));
-      aBtns[i].classList.add("btn__active");
     }
   </script>
 </body>
