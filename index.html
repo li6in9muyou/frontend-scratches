@@ -7,43 +7,85 @@
   <title>Scratch</title>
   <style>
     * {
-      font-family: sans-serif;
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
     }
 
-    input {
-      width: 6em;
-      font-size: 40px;
-      margin: 20px;
-      outline-offset: 3px;
-      outline: none;
-      outline-style: solid;
-      outline-width: 6px;
+    html,
+    body {
+      height: 100%;
+      background-color: #888;
     }
 
-    .input__invalid {
-      outline-color: red;
+    .box {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 200px;
+      background-color: limegreen;
+      border-radius: 8px;
+      cursor: move;
+      transition-property: transform;
+      transition-duration: 200ms;
     }
 
-
-    .input__valid {
-      outline-color: green;
+    .box__lifted {
+      transform: translate(-50%, -50%) scale(1.05);
+      box-shadow: 6px 6px 16px #222;
     }
   </style>
+  <script>
+    function listenEvent(elem, event, callback, ...args) {
+      var unlisten = null;
+      if (elem.addEventListener) {
+        elem.addEventListener(event, callback, ...args);
+        unlisten = function () {
+          elem.removeEventListener(event, callback);
+        };
+      } else {
+        // IE 9
+        elem.attachEvent("on" + event);
+        unlisten = function () {
+          elem.detachEvent("on" + event, callback);
+        };
+      }
+      return unlisten;
+    }
+  </script>
 </head>
 
 <body>
-  <input type="text" name="id" id="inputId" placeholder="长度6-10" class="input__invalid">
+  <div class="box" data-js-box></div>
   <script>
-    document.querySelector("input#inputId").oninput = function (e) {
-      var textLen = e.target.value.trimEnd().length;
-      if (6 <= textLen && textLen <= 10) {
-        e.target.classList.remove("input__invalid");
-        e.target.classList.add("input__valid");
-      } else {
-        e.target.classList.remove("input__valid");
-        e.target.classList.add("input__invalid");
+    var box = document.querySelector("[data-js-box]");
+    var bb = document.querySelector("body");
+    var boxDragging = false;
+
+    listenEvent(box, "mousedown", function () {
+      box.classList.toggle("box__lifted");
+      boxDragging = !boxDragging;
+    });
+
+    listenEvent(bb, "mousemove", function (e) {
+      console.log(boxDragging);
+      if (boxDragging) {
+        box.style.top = e.clientY + "px";
+        box.style.left = e.clientX + "px";
       }
-    }
+    }, { passive: true });
+
+    listenEvent(box, "mouseup", function () {
+      box.classList.toggle("box__lifted");
+      boxDragging = !boxDragging;
+    });
+
+    listenEvent(box, "mouseout", function () {
+      box.classList.remove("box__lifted");
+      boxDragging = false;
+    });
   </script>
 </body>
 
