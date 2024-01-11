@@ -6,87 +6,97 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>Scratch</title>
   <style>
-    a {
-      color: unset;
-      text-decoration: none;
-    }
-
     * {
       font-family: sans-serif;
     }
 
-    main {
-      border: solid #666 2px;
-      width: fit-content;
-    }
-
-    nav {
+    .banner>ul {
       display: flex;
-      gap: 20px;
-    }
-
-    nav>a {
+      gap: 40px;
       font-size: 30px;
-      padding: 10px;
+      padding: 0;
     }
 
-    .tab--content {
-      position: relative;
-      height: 100px;
+    .banner>ul>li {
+      list-style: none;
+      padding: 12px;
+      border: solid 2px black;
+      user-select: none;
+      cursor: pointer;
     }
 
-    .tab--content>p {
-      position: absolute;
-      padding: 10px;
-      visibility: hidden;
-      width: 100%;
-      height: 100%;
-      box-sizing: border-box;
-      margin: 0;
-    }
-
-    .tab--content>p.tab--content__active {
-      visibility: visible;
-    }
-
-    nav>a.tab__active {
-      border-bottom: solid 8px #ff7200;
+    li.btn__active {
+      background-color: #888;
+      color: #fff;
     }
   </style>
 </head>
 
 <body>
-  <main>
-    <nav>
-      <a data-tab-idx=0 class="tab__active" href="#">tab 1</a>
-      <a data-tab-idx=1 href="#">tab 2</a>
-      <a data-tab-idx=2 href="#">tab3</a>
-    </nav>
-    <section class="tab--content">
-      <p class="tab--content__active">tab 1 content</p>
-      <p>tab 2 content</p>
-      <p>tab 3 content</p>
-    </section>
-  </main>
+  <section class="banner">
+    <ul>
+      <li class="btn__active">1</li>
+      <li>2</li>
+      <li>3</li>
+      <li>4</li>
+    </ul>
+    <img src="img/p1.jpg" alt="banner image" width="500" height="375">
+  </section>
   <script>
-    var nav = document.querySelector("nav");
-    var tabs = document.querySelectorAll("nav > a");
-    var tabPanels = document.querySelectorAll(".tab--content > p");
-
-    function handleTabMouseOver(i) {
-      tabs.forEach(tab => tab.classList.remove("tab__active"));
-      tabs[i].classList.add("tab__active");
-
-      tabPanels.forEach(p => p.classList.remove("tab--content__active"));
-      tabPanels[i].classList.add("tab--content__active");
+    function nodeIndexOf(node) {
+      var silibings = node.parentNode.children;
+      for (var i = 0; i < silibings.length; i++) {
+        if (node === silibings[i]) {
+          return i;
+        }
+      }
+      return -1;
     }
 
-    nav.onmouseover = (e) => {
-      if (e.target.tagName.toLowerCase() === "a") {
-        handleTabMouseOver(e.target.dataset.tabIdx);
+    var IMAGES = [
+      {
+        src: "img/p1.jpg",
+        width: "500",
+        height: "375"
+      },
+      {
+        src: "img/p2.jpg",
+        width: "500",
+        height: "310"
+      },
+      {
+        src: "img/p3.jpg",
+        width: "533",
+        height: "300"
+      },
+      {
+        src: "img/p4.jpg",
+        width: "533",
+        height: "300"
+      },
+    ];
+
+    var oSlider = document.querySelector(".banner>ul");
+    var aBtns = document.querySelectorAll(".banner>ul>li");
+    var oImg = document.querySelector(".banner>img");
+
+    oSlider.onmouseover = function (e) {
+      if (e.target.tagName.toLowerCase() === "li") {
+        var idx = nodeIndexOf(e.target);
+        showImg(idx);
+        hightlightBtn(idx);
       }
     };
 
+    function showImg(i) {
+      var img = IMAGES[i];
+      Object.assign(oImg, img);
+    }
+
+    function hightlightBtn(i) {
+      aBtns.forEach(btn => btn.classList.remove("btn__active"));
+      aBtns[i].classList.add("btn__active");
+    }
   </script>
 </body>
 
