@@ -203,8 +203,8 @@
             }
           }
 
+          others.forEach(other => other.classList.remove("box__collided"));
           if (collidedBox) {
-            others.forEach(other => other.classList.remove("box__collided"));
             collidedBox.classList.add("box__collided");
           }
         };
