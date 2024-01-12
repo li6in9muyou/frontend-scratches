@@ -60,69 +60,77 @@
   <div class="box" data-js-box></div>
   <script>
 
-    function Draggable(elem, cbDragStart, cbDragEnd) {
-      this.elem = elem;
-      this.cbDragStart = cbDragStart;
-      this.cbDragEnd = cbDragEnd;
-      this.dragging = false;
-      this.lastMousePos = { x: 0, y: 0 };
-      this.dragKey = NaN;
-      this.onDragStart = function (e) {
-        if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
-          return;
-        }
-        if (this.dragging) {
-          return;
-        }
-
-        this.dragKey = e.button;
-        this.dragging = true;
-        this.elem.dataset.dgDragging = this.dragging;
-        this.lastMousePos.x = e.clientX;
-        this.lastMousePos.y = e.clientY;
-        this.cbDragStart && this.cbDragStart();
-      };
-      this.onDragMove = function (e) {
-        if (!this.dragging) {
-          return;
-        }
-
-        var posDiff = {
-          x: e.clientX - this.lastMousePos.x,
-          y: e.clientY - this.lastMousePos.y
-        };
-        this.lastMousePos.x = e.clientX;
-        this.lastMousePos.y = e.clientY;
-        var newPos = {
-          x: this.elem.offsetLeft,
-          y: this.elem.offsetTop
-        };
-        newPos.x += posDiff.x;
-        newPos.y += posDiff.y;
-        this.elem.style.top = newPos.y + "px";
-        this.elem.style.left = newPos.x + "px";
-      };
-      this.onDragEnd = function (e) {
-        if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
-          return;
-        }
-        if (!this.dragging) {
-          return;
-        }
-        this.dragKey = NaN;
+    function DraggableManager() {
+      function Draggable(elem, cbDragStart, cbDragEnd) {
+        this.elem = elem;
+        this.cbDragStart = cbDragStart;
+        this.cbDragEnd = cbDragEnd;
         this.dragging = false;
-        this.elem.dataset.dgDragging = this.dragging;
-        this.cbDragEnd && this.cbDragEnd();
-      };
+        this.lastMousePos = { x: 0, y: 0 };
+        this.dragKey = NaN;
+        this.onDragStart = function (e) {
+          if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
+            return;
+          }
+          if (this.dragging) {
+            return;
+          }
 
-      listenEvent(elem, "mousedown", this.onDragStart.bind(this));
-      listenEvent(elem, "mousemove", this.onDragMove.bind(this), { passive: true });
-      listenEvent(elem, "mouseup", this.onDragEnd.bind(this));
-      listenEvent(elem, "mouseout", this.onDragEnd.bind(this));
+          this.dragKey = e.button;
+          this.dragging = true;
+          this.elem.dataset.dgDragging = this.dragging;
+          this.lastMousePos.x = e.clientX;
+          this.lastMousePos.y = e.clientY;
+          this.cbDragStart && this.cbDragStart();
+        };
+        this.onDragMove = function (e) {
+          if (!this.dragging) {
+            return;
+          }
+
+          var posDiff = {
+            x: e.clientX - this.lastMousePos.x,
+            y: e.clientY - this.lastMousePos.y
+          };
+          this.lastMousePos.x = e.clientX;
+          this.lastMousePos.y = e.clientY;
+          var newPos = {
+            x: this.elem.offsetLeft,
+            y: this.elem.offsetTop
+          };
+          newPos.x += posDiff.x;
+          newPos.y += posDiff.y;
+          this.elem.style.top = newPos.y + "px";
+          this.elem.style.left = newPos.x + "px";
+        };
+        this.onDragEnd = function (e) {
+          if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
+            return;
+          }
+          if (!this.dragging) {
+            return;
+          }
+          this.dragKey = NaN;
+          this.dragging = false;
+          this.elem.dataset.dgDragging = this.dragging;
+          this.cbDragEnd && this.cbDragEnd();
+        };
+
+        listenEvent(elem, "mousedown", this.onDragStart.bind(this));
+        listenEvent(elem, "mousemove", this.onDragMove.bind(this), { passive: true });
+        listenEvent(elem, "mouseup", this.onDragEnd.bind(this));
+        listenEvent(elem, "mouseout", this.onDragEnd.bind(this));
+      }
+
+      this.draggableList = [];
+      this.addDraggable = function (...args) {
+        this.draggableList.push(new Draggable(...args));
+      };
     }
 
     var box = document.querySelector("[data-js-box]");
-    var _ = new Draggable(box, () => box.classList.toggle("box__lifted"), () => box.classList.toggle("box__lifted"));
+    var dMgr = new DraggableManager();
+    dMgr.addDraggable(box, () => box.classList.toggle("box__lifted"), () => box.classList.toggle("box__lifted"));
   </script>
 </body>
 </html>
