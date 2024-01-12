@@ -59,6 +59,52 @@
 <body>
   <div class="box" data-js-box></div>
   <script>
+
+    function Draggable(elem, cbDragStart, cbDragEnd) {
+      this.elem = elem;
+      this.cbDragStart = cbDragStart;
+      this.cbDragEnd = cbDragEnd;
+      this.dragging = false;
+      this.lastMousePos = { x: 0, y: 0 };
+      this.onDragStart = function (e) {
+        this.dragging = !this.dragging;
+        this.elem.dataset.dgDragging = this.dragging;
+        this.lastMousePos.x = e.clientX;
+        this.lastMousePos.y = e.clientY;
+        this.cbDragStart && this.cbDragStart();
+      };
+      this.onDragMove = function (e) {
+        if (!this.dragging) {
+          return;
+        }
+
+        var posDiff = {
+          x: e.clientX - this.lastMousePos.x,
+          y: e.clientY - this.lastMousePos.y
+        };
+        this.lastMousePos.x = e.clientX;
+        this.lastMousePos.y = e.clientY;
+        var newPos = {
+          x: this.elem.offsetLeft,
+          y: this.elem.offsetTop
+        };
+        newPos.x += posDiff.x;
+        newPos.y += posDiff.y;
+        this.elem.style.top = newPos.y + "px";
+        this.elem.style.left = newPos.x + "px";
+      };
+      this.onDragEnd = function () {
+        this.dragging = false;
+        this.elem.dataset.dgDragging = this.dragging;
+        this.cbDragEnd && this.cbDragEnd();
+      };
+
+      listenEvent(elem, "mousedown", this.onDragStart);
+      listenEvent(elem, "mousemove", this.onDragMove, { passive: true });
+      listenEvent(elem, "mouseup", this.onDragEnd);
+      listenEvent(elem, "mouseout", this.onDragEnd);
+    }
+
     var box = document.querySelector("[data-js-box]");
     var bb = document.querySelector("body");
     var boxDragging = false;
