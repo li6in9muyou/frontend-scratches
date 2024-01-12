@@ -34,7 +34,7 @@
 
     .box__lifted {
       transform: translate(-50%, -50%) scale(1.05);
-      box-shadow: 6px 6px 16px #222;
+      box-shadow: 3px 3px 6px #222;
     }
   </style>
   <script>
@@ -63,21 +63,27 @@
     var box = document.querySelector("[data-js-box]");
     var bb = document.querySelector("body");
     var boxDragging = false;
-    var boxPos = {
-      x: parseFloat(getComputedStyle(box).left),
-      y: parseFloat(getComputedStyle(box).top)
-    };
+
+    var lastMousePos = { x: 0, y: 0 };
 
     listenEvent(box, "mousedown", function (e) {
       box.classList.toggle("box__lifted");
       boxDragging = !boxDragging;
+      lastMousePos.x = e.clientX;
+      lastMousePos.y = e.clientY;
     });
 
     listenEvent(bb, "mousemove", function (e) {
       if (boxDragging) {
         var posDiff = {
-          x: e.clientX - boxPos.x,
-          y: e.clientY - boxPos.y
+          x: e.clientX - lastMousePos.x,
+          y: e.clientY - lastMousePos.y
+        };
+        lastMousePos.x = e.clientX;
+        lastMousePos.y = e.clientY;
+        var boxPos = {
+          x: box.offsetLeft,
+          y: box.offsetTop
         };
         boxPos.x += posDiff.x;
         boxPos.y += posDiff.y;
