@@ -176,7 +176,23 @@
     }
 
     function boxOnDragEnd(box) {
-      return boxOnDragStart(box);
+      function moveBoxToSlot(box, slotIdx) {
+        var [slotX, slotY] = boxSlots[+slotIdx];
+        box.style.top = slotY + "px";
+        box.style.left = slotX + "px";
+        box.dataset.boxSlotIdx = slotIdx.toString();
+      }
+
+      return () => {
+        var d = document.querySelector(".box__collided");
+        if (d !== null) {
+          var dragTo = d.dataset.boxSlotIdx;
+          var dragFrom = box.dataset.boxSlotIdx;
+          moveBoxToSlot(box, dragTo);
+          moveBoxToSlot(d, dragFrom);
+        }
+        boxOnDragStart(box)();
+      };
     }
 
     function boxOnDragMove(box) {
@@ -216,6 +232,7 @@
     var aBox = Array.from(document.querySelectorAll(".box"));
     var oBoxWrap = document.querySelector(".box-wrap");
     var dMgr = new DraggableManager();
+    var boxSlots = [];
 
     aBox.forEach((box) => dMgr.addDraggable(
       box,
@@ -225,9 +242,11 @@
     ));
     oBoxWrap.style.height = oBoxWrap.offsetHeight + "px";
     oBoxWrap.style.width = oBoxWrap.offsetWidth + "px";
-    aBox.forEach((box) => {
+    aBox.forEach((box, idx) => {
       box.style.top = box.offsetTop + "px";
       box.style.left = box.offsetLeft + "px";
+      boxSlots.push([box.offsetLeft, box.offsetTop]);
+      box.dataset.boxSlotIdx = idx.toString();
     });
     aBox.forEach((box) => box.style.position = "absolute");
   </script>
