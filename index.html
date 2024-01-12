@@ -170,7 +170,7 @@
 
     function boxOnDragStart(box) {
       return () => {
-        box.classList.remove("box__collided");
+        aBox.forEach(box => box.classList.remove("box__collided"));
         box.classList.toggle("box__lifted");
       };
     }
@@ -203,8 +203,8 @@
             }
           }
 
-          others.forEach(other => other.classList.remove("box__collided"));
           if (collidedBox) {
+            others.forEach(other => other.classList.remove("box__collided"));
             collidedBox.classList.add("box__collided");
           }
         };
