@@ -66,8 +66,17 @@
       this.cbDragEnd = cbDragEnd;
       this.dragging = false;
       this.lastMousePos = { x: 0, y: 0 };
+      this.dragKey = NaN;
       this.onDragStart = function (e) {
-        this.dragging = !this.dragging;
+        if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
+          return;
+        }
+        if (this.dragging) {
+          return;
+        }
+
+        this.dragKey = e.button;
+        this.dragging = true;
         this.elem.dataset.dgDragging = this.dragging;
         this.lastMousePos.x = e.clientX;
         this.lastMousePos.y = e.clientY;
@@ -93,7 +102,14 @@
         this.elem.style.top = newPos.y + "px";
         this.elem.style.left = newPos.x + "px";
       };
-      this.onDragEnd = function () {
+      this.onDragEnd = function (e) {
+        if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
+          return;
+        }
+        if (!this.dragging) {
+          return;
+        }
+        this.dragKey = NaN;
         this.dragging = false;
         this.elem.dataset.dgDragging = this.dragging;
         this.cbDragEnd && this.cbDragEnd();
