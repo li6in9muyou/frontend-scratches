@@ -168,46 +168,60 @@
       };
     }
 
+    function boxOnDragStart(box) {
+      return () => {
+        box.classList.remove("box__collided");
+        box.classList.toggle("box__lifted");
+      };
+    }
+
+    function boxOnDragEnd(box) {
+      return boxOnDragStart(box);
+    }
+
+    function boxOnDragMove(box) {
+      function markCollidedBox(me, others) {
+        return function () {
+          var collidedBox;
+          var minCenterDistSqr = Number.MAX_SAFE_INTEGER;
+          for (const other of others) {
+            var t1 = me.offsetTop, t2 = other.offsetTop;
+            var l1 = me.offsetLeft, l2 = other.offsetLeft;
+            var r1 = l1 + me.offsetWidth, r2 = l2 + other.offsetWidth;
+            var b1 = t1 + me.offsetHeight, b2 = t2 + other.offsetHeight;
+            var noCollision = t1 > b2 || r1 < l2 || b1 < t2 || l1 > r2;
+            if (!noCollision) {
+              var c1X = (l1 + r1) / 2;
+              var c1Y = (t1 + b1) / 2;
+              var c2X = (l2 + r2) / 2;
+              var c2Y = (t2 + b2) / 2;
+              var centerDistanceSqr = (c1X - c2X) * (c1X - c2X) + (c1Y - c2Y) * (c1Y - c2Y);
+              if (centerDistanceSqr < minCenterDistSqr) {
+                minCenterDistSqr = centerDistanceSqr;
+                collidedBox = other;
+              }
+            }
+          }
+
+          others.forEach(other => other.classList.remove("box__collided"));
+          if (collidedBox) {
+            collidedBox.classList.add("box__collided");
+          }
+        };
+      }
+
+      return markCollidedBox(box, aBox.filter(b => b !== box));
+    }
+
     var aBox = Array.from(document.querySelectorAll(".box"));
     var oBoxWrap = document.querySelector(".box-wrap");
     var dMgr = new DraggableManager();
-    var boxToggleLifted = function (box) {
-      return () => box.classList.toggle("box__lifted");
-    };
-    var markCollidedBox = function (me, others) {
-      return function () {
-        var collidedBox;
-        var minCenterDistSqr = Number.MAX_SAFE_INTEGER;
-        for (const other of others) {
-          var t1 = me.offsetTop, t2 = other.offsetTop;
-          var l1 = me.offsetLeft, l2 = other.offsetLeft;
-          var r1 = l1 + me.offsetWidth, r2 = l2 + other.offsetWidth;
-          var b1 = t1 + me.offsetHeight, b2 = t2 + other.offsetHeight;
-          var noCollision = t1 > b2 || r1 < l2 || b1 < t2 || l1 > r2;
-          if (!noCollision) {
-            var c1X = (l1 + r1) / 2;
-            var c1Y = (t1 + b1) / 2;
-            var c2X = (l2 + r2) / 2;
-            var c2Y = (t2 + b2) / 2;
-            var centerDistanceSqr = (c1X - c2X) * (c1X - c2X) + (c1Y - c2Y) * (c1Y - c2Y);
-            if (centerDistanceSqr < minCenterDistSqr) {
-              minCenterDistSqr = centerDistanceSqr;
-              collidedBox = other;
-            }
-          }
-        }
-        
-        others.forEach(other => other.classList.remove("box__collided"));
-        if (collidedBox) {
-          collidedBox.classList.add("box__collided");
-        }
-      };
-    };
+
     aBox.forEach((box) => dMgr.addDraggable(
       box,
-      boxToggleLifted(box),
-      boxToggleLifted(box),
-      markCollidedBox(box, aBox.filter(b => b !== box))
+      boxOnDragStart(box),
+      boxOnDragEnd(box),
+      boxOnDragMove(box)
     ));
     oBoxWrap.style.height = oBoxWrap.offsetHeight + "px";
     oBoxWrap.style.width = oBoxWrap.offsetWidth + "px";
