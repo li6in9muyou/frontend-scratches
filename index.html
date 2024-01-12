@@ -180,14 +180,14 @@
         var [slotX, slotY] = boxSlots[+slotIdx];
         box.style.top = slotY + "px";
         box.style.left = slotX + "px";
-        box.dataset.boxSlotIdx = slotIdx.toString();
+        boxSlotTable[+box.dataset.boxId] = +slotIdx;
       }
 
       return () => {
         var d = document.querySelector(".box__collided");
         if (d !== null) {
-          var dragTo = d.dataset.boxSlotIdx;
-          var dragFrom = box.dataset.boxSlotIdx;
+          const dragTo = boxSlotTable[+d.dataset.boxId];
+          const dragFrom = boxSlotTable[+box.dataset.boxId];
           moveBoxToSlot(box, dragTo);
           moveBoxToSlot(d, dragFrom);
         }
@@ -233,6 +233,7 @@
     var oBoxWrap = document.querySelector(".box-wrap");
     var dMgr = new DraggableManager();
     var boxSlots = [];
+    const boxSlotTable = [];
 
     aBox.forEach((box) => dMgr.addDraggable(
       box,
@@ -246,7 +247,8 @@
       box.style.top = box.offsetTop + "px";
       box.style.left = box.offsetLeft + "px";
       boxSlots.push([box.offsetLeft, box.offsetTop]);
-      box.dataset.boxSlotIdx = idx.toString();
+      boxSlotTable.push(idx);
+      box.dataset.boxId = idx.toString();
     });
     aBox.forEach((box) => box.style.position = "absolute");
   </script>
