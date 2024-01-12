@@ -62,7 +62,7 @@
     var box = document.querySelector("[data-js-box]");
     var bb = document.querySelector("body");
     var boxDragging = false;
-
+    var boxSize = { x: box.offsetWidth, y: box.offsetHeight };
     var lastMousePos = { x: 0, y: 0 };
 
     listenEvent(box, "mousedown", function (e) {
@@ -72,23 +72,33 @@
       lastMousePos.y = e.clientY;
     });
 
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(v, max));
+    }
+
     listenEvent(bb, "mousemove", function (e) {
-      if (boxDragging) {
-        var posDiff = {
-          x: e.clientX - lastMousePos.x,
-          y: e.clientY - lastMousePos.y
-        };
-        lastMousePos.x = e.clientX;
-        lastMousePos.y = e.clientY;
-        var boxPos = {
-          x: box.offsetLeft,
-          y: box.offsetTop
-        };
-        boxPos.x += posDiff.x;
-        boxPos.y += posDiff.y;
-        box.style.top = boxPos.y + "px";
-        box.style.left = boxPos.x + "px";
+      if (!boxDragging) {
+        return;
       }
+
+      var posDiff = {
+        x: e.clientX - lastMousePos.x,
+        y: e.clientY - lastMousePos.y
+      };
+      lastMousePos.x = e.clientX;
+      lastMousePos.y = e.clientY;
+      var boxPos = {
+        x: box.offsetLeft,
+        y: box.offsetTop
+      };
+      boxPos.x += posDiff.x;
+      boxPos.y += posDiff.y;
+      // clamp's params are affected by transform: translate(-50%, -50%)
+      // 20 is magic number to ensure box-shadow visible
+      boxPos.y = clamp(boxPos.y, 20 + boxSize.y / 2, window.innerHeight - boxSize.y / 2 - 20);
+      boxPos.x = clamp(boxPos.x, 20 + boxSize.x / 2, window.innerWidth - boxSize.x / 2 - 20);
+      box.style.top = boxPos.y + "px";
+      box.style.left = boxPos.x + "px";
     }, { passive: true });
 
     listenEvent(box, "mouseup", function () {
