@@ -38,7 +38,7 @@
   </style>
   <script>
     function listenEvent(elem, event, callback, ...args) {
-      var unlisten = null;
+      var unlisten;
       if (elem.addEventListener) {
         elem.addEventListener(event, callback, ...args);
         unlisten = function () {
