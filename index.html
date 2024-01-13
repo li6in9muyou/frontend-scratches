@@ -77,10 +77,11 @@
 
     let triggerCount = 0;
     const m = document.querySelector("main");
-    listenEvent(m, "mousedown", debounceNaive((e) => {
+    listenEvent(m, "wheel", debounceNaive((e) => {
       ++triggerCount;
       m.textContent = `count: ${triggerCount}`;
-    }));
+      console.log(e);
+    }), { passive: true });
 
   </script>
 </body>
