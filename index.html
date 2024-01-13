@@ -187,8 +187,12 @@
       return { x: oldPos.x, y: newPos.y };
     }
 
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
+
     function boundedY(oldPos, newPos) {
-      return { x: oldPos.x, y: Math.max(0, Math.min(scrollThumbMaxDeltaY, newPos.y)) };
+      return { x: oldPos.x, y: clamp(newPos.y, 0, scrollThumbMaxDeltaY) };
     }
 
     function scrollContent() {
@@ -196,6 +200,12 @@
     }
 
     dragMgr.addDraggable(oScrollThumb, null, null, pipe(moveOnlyY, boundedY, scrollContent));
+
+    listenEvent(oContent, "wheel", (e) => {
+      console.log("oContent wheel event", e);
+      oScrollThumb.style.top = `${clamp(oScrollThumb.offsetTop + e.deltaY * 0.2, 0, scrollThumbMaxDeltaY)}px`;
+      scrollContent();
+    }, { passive: true });
   </script>
 </body>
 </html>
