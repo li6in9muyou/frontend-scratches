@@ -64,20 +64,20 @@
   </style>
   <script>
     function listenEvent(elem, event, callback, ...args) {
-      var unlisten;
+      let removeListener;
       if (elem.addEventListener) {
         elem.addEventListener(event, callback, ...args);
-        unlisten = function () {
+        removeListener = function () {
           elem.removeEventListener(event, callback);
         };
       } else {
         // IE 9
         elem.attachEvent("on" + event);
-        unlisten = function () {
+        removeListener = function () {
           elem.detachEvent("on" + event, callback);
         };
       }
-      return unlisten;
+      return removeListener;
     }
   </script>
 </head>
@@ -128,13 +128,13 @@
             return;
           }
 
-          var posDiff = {
+          const posDiff = {
             x: e.clientX - this.lastMousePos.x,
             y: e.clientY - this.lastMousePos.y
           };
           this.lastMousePos.x = e.clientX;
           this.lastMousePos.y = e.clientY;
-          var newPos = {
+          const newPos = {
             x: this.elem.offsetLeft,
             y: this.elem.offsetTop
           };
@@ -205,20 +205,19 @@
     function boxOnDragMove(box) {
       function markCollidedBox(me, others) {
         return function () {
-          var collidedBox;
-          var minCenterDistSqr = Number.MAX_SAFE_INTEGER;
+          let collidedBox, minCenterDistSqr = Number.MAX_SAFE_INTEGER;
           for (const other of others) {
-            var t1 = me.offsetTop, t2 = other.offsetTop;
-            var l1 = me.offsetLeft, l2 = other.offsetLeft;
-            var r1 = l1 + me.offsetWidth, r2 = l2 + other.offsetWidth;
-            var b1 = t1 + me.offsetHeight, b2 = t2 + other.offsetHeight;
-            var noCollision = t1 > b2 || r1 < l2 || b1 < t2 || l1 > r2;
+            const t1 = me.offsetTop, t2 = other.offsetTop;
+            const l1 = me.offsetLeft, l2 = other.offsetLeft;
+            const r1 = l1 + me.offsetWidth, r2 = l2 + other.offsetWidth;
+            const b1 = t1 + me.offsetHeight, b2 = t2 + other.offsetHeight;
+            const noCollision = t1 > b2 || r1 < l2 || b1 < t2 || l1 > r2;
             if (!noCollision) {
-              var c1X = (l1 + r1) / 2;
-              var c1Y = (t1 + b1) / 2;
-              var c2X = (l2 + r2) / 2;
-              var c2Y = (t2 + b2) / 2;
-              var centerDistanceSqr = (c1X - c2X) * (c1X - c2X) + (c1Y - c2Y) * (c1Y - c2Y);
+              const c1X = (l1 + r1) / 2;
+              const c1Y = (t1 + b1) / 2;
+              const c2X = (l2 + r2) / 2;
+              const c2Y = (t2 + b2) / 2;
+              const centerDistanceSqr = (c1X - c2X) * (c1X - c2X) + (c1Y - c2Y) * (c1Y - c2Y);
               if (centerDistanceSqr < minCenterDistSqr) {
                 minCenterDistSqr = centerDistanceSqr;
                 collidedBox = other;
@@ -259,10 +258,10 @@
       };
     }
 
-    var aBox = Array.from(document.querySelectorAll(".box"));
-    var oBoxWrap = document.querySelector(".box-wrap");
-    var dMgr = new DraggableManager();
-    var boxSlots = [];
+    const aBox = Array.from(document.querySelectorAll(".box"));
+    const oBoxWrap = document.querySelector(".box-wrap");
+    const dMgr = new DraggableManager();
+    const boxSlots = [];
     const boxSlotTable = [];
 
     aBox.forEach((box) => dMgr.addDraggable(
