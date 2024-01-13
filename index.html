@@ -155,9 +155,8 @@
         };
 
         listenEvent(elem, "mousedown", this.onDragStart.bind(this));
-        listenEvent(elem, "mousemove", this.onDragMove.bind(this), { passive: true });
-        listenEvent(elem, "mouseup", this.onDragEnd.bind(this));
-        listenEvent(elem, "mouseout", this.onDragEnd.bind(this));
+        listenEvent(document, "mousemove", this.onDragMove.bind(this), { passive: true });
+        listenEvent(document, "mouseup", this.onDragEnd.bind(this));
       }
 
       this.draggableList = [];
