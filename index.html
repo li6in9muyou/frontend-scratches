@@ -31,9 +31,16 @@
       background-color: limegreen;
       width: 500px;
       height: 500px;
-      font-size: 50px;
+      font-size: 70px;
+      font-weight: bold;
       line-height: 500px;
       text-align: center;
+      transition: 200ms;
+      user-select: none;
+    }
+
+    main:active {
+      transform: scale(.9);
     }
   </style>
   <script>
@@ -57,55 +64,22 @@
 </head>
 
 <body>
-  <main>move mouse in</main>
+  <main>click me</main>
   <script>
-    function throttleTimeStamp(callback, intervalMilliSec = 100) {
-      let lastExec = 0;
+
+    function debounceNaive(callback, waitMilliSec = 400) {
+      let timer;
       return (...args) => {
-        if (Date.now() - lastExec > intervalMilliSec) {
-          callback(...args);
-          lastExec = Date.now();
-        }
+        clearTimeout(timer);
+        timer = setTimeout(() => callback(...args), waitMilliSec);
       };
     }
 
-    const throttleAnimationFrame = (fn) => {
-      let frame;
-      return (...args) => {
-        if (frame) {
-          cancelAnimationFrame(frame);
-        }
-        frame = requestAnimationFrame(() => {
-          fn(...args);
-        });
-      };
-    };
-
-    function throttleTimeout(callback, intervalMilliSec = 100) {
-      let canExec = true;
-      return (...args) => {
-        if (canExec) {
-          canExec = false;
-          setTimeout(() => canExec = true, intervalMilliSec);
-          callback(...args);
-        }
-      };
-    }
-
-    let triggerCount = [0, 0, 0, 0];
+    let triggerCount = 0;
     const m = document.querySelector("main");
-    listenEvent(m, "mousemove", (e) => {
-      m.textContent = `x:${e.clientX},y:${e.clientY}`;
-      ++triggerCount[0];
-    });
-    listenEvent(m, "mousemove", throttleTimeout(() => {
-      ++triggerCount[1];
-    }));
-    listenEvent(m, "mousemove", throttleTimeStamp(() => {
-      ++triggerCount[2];
-    }));
-    listenEvent(m, "mousemove", throttleAnimationFrame(() => {
-      ++triggerCount[3];
+    listenEvent(m, "mousedown", debounceNaive((e) => {
+      ++triggerCount;
+      m.textContent = `count: ${triggerCount}`;
     }));
 
   </script>
