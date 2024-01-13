@@ -203,7 +203,6 @@
     dragMgr.addDraggable(oScrollThumb, null, null, pipe(moveOnlyY, boundedY, scrollContent));
 
     listenEvent(oContent, "wheel", (e) => {
-      console.log("oContent wheel event", e);
       oScrollThumb.style.top = `${clamp(oScrollThumb.offsetTop + e.deltaY * 0.2, 0, scrollThumbMaxDeltaY)}px`;
       scrollContent();
     }, { passive: true });
