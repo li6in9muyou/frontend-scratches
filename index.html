@@ -184,8 +184,8 @@
       return boxSlotTable[+box.dataset.boxId];
     }
 
-    function reflowBoxes() {
-      aBox.forEach(box => {
+    function reflowBoxes(boxes) {
+      boxes.forEach(box => {
         const boxSlotId = getSlotId(box);
         console.assert(0 <= boxSlotId && boxSlotId < boxSlots.length,
           "reflowBoxes: invalid slot id", boxSlotId, boxSlots);
@@ -198,7 +198,7 @@
     function boxOnDragEnd(box) {
       return () => {
         boxOnDragStart(box)();
-        reflowBoxes();
+        reflowBoxes(aBox);
       };
     }
 
@@ -241,23 +241,20 @@
         if (dragTo !== null) {
           const dragToSlot = boxSlotTable[+dragTo.dataset.boxId];
           const origSlot = boxSlotTable[+box.dataset.boxId];
+          const others = aBox.filter(b => b !== box);
           if (origSlot > dragToSlot) {
-            aBox.filter(b => b !== box)
-              .filter(other => {
-                const needRelocate = getSlotId(other);
-                return dragToSlot <= needRelocate && needRelocate < origSlot;
-              })
-              .forEach(relocatingBox => moveBoxToSlot(relocatingBox, getSlotId(relocatingBox) + 1));
+            others.filter(other => {
+              const needRelocate = getSlotId(other);
+              return dragToSlot <= needRelocate && needRelocate < origSlot;
+            }).forEach(relocatingBox => moveBoxToSlot(relocatingBox, getSlotId(relocatingBox) + 1));
           } else {
-            aBox.filter(b => b !== box)
-              .filter(other => {
-                const needRelocate = getSlotId(other);
-                return origSlot < needRelocate && needRelocate <= dragToSlot;
-              })
-              .forEach(box => moveBoxToSlot(box, getSlotId(box) - 1));
+            others.filter(other => {
+              const needRelocate = getSlotId(other);
+              return origSlot < needRelocate && needRelocate <= dragToSlot;
+            }).forEach(box => moveBoxToSlot(box, getSlotId(box) - 1));
           }
           moveBoxToSlot(box, dragToSlot);
-          reflowBoxes();
+          reflowBoxes(others);
         }
       };
     }
