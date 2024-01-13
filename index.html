@@ -171,6 +171,7 @@
 
     function boxOnDragStart(box) {
       return () => {
+        lastDragToBox = null;
         aBox.forEach(box => box.classList.remove("box__collided"));
         box.classList.toggle("box__lifted");
       };
@@ -229,13 +230,21 @@
         return collidedBox;
       }
 
+      function markCollidedBox(bb) {
+        if (bb === null) {
+          return;
+        }
+        aBox.filter(b => b !== bb).forEach(other => other.classList.remove("box__collided"));
+        bb.classList.add("box__collided");
+      }
+
       return () => {
         const others = aBox.filter(b => b !== box);
         const dragTo = findCollidedBox(box, others);
-        if (dragTo !== null) {
-          others.forEach(other => other.classList.remove("box__collided"));
-          dragTo.classList.add("box__collided");
+        markCollidedBox(dragTo);
 
+        if (dragTo !== null && dragTo !== lastDragToBox) {
+          lastDragToBox = dragTo;
           const dragToSlot = boxSlotTable[+dragTo.dataset.boxId];
           const origSlot = boxSlotTable[+box.dataset.boxId];
           if (origSlot > dragToSlot) {
@@ -258,6 +267,7 @@
     const aBox = Array.from(document.querySelectorAll(".box"));
     const oBoxWrap = document.querySelector(".box-wrap");
     const dMgr = new DraggableManager();
+    let lastDragToBox = null;
     const boxSlots = [];
     const boxSlotTable = [];
 
