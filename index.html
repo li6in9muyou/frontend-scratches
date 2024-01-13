@@ -172,10 +172,8 @@
     oContent.innerHTML = new Array(10).fill(oContent.innerHTML).join("");
     const oScrollThumb = document.querySelector(".scroll > .scroll--thumb");
     const viewH = document.querySelector(".container").offsetHeight;
-    const scrollH = oContent.offsetHeight - viewH;
-    const r = scrollH < 0 ? 1 : viewH / scrollH;
     const scrollBarH = oScrollThumb.parentElement.offsetHeight;
-    const scrollThumbH = r * scrollBarH;
+    const scrollThumbH = scrollBarH * viewH / oContent.offsetHeight;
     const scrollThumbMaxDeltaY = scrollBarH - scrollThumbH;
 
     oScrollThumb.style.height = `${scrollThumbH}px`;
@@ -197,7 +195,7 @@
     }
 
     function scrollContent() {
-      oContent.style.top = `-${scrollH * oScrollThumb.offsetTop / scrollThumbMaxDeltaY}px`;
+      oContent.style.top = `-${(oContent.offsetHeight - viewH) * oScrollThumb.offsetTop / scrollThumbMaxDeltaY}px`;
     }
 
     dragMgr.addDraggable(oScrollThumb, null, null, pipe(moveOnlyY, boundedY, scrollContent));
