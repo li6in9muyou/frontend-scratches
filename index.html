@@ -24,23 +24,39 @@
     body {
       display: flex;
       justify-content: center;
-      align-items: center;
+      padding-top: 100px;
     }
 
     main {
-      background-color: limegreen;
-      width: 500px;
-      height: 500px;
-      font-size: 70px;
-      font-weight: bold;
-      line-height: 500px;
-      text-align: center;
-      transition: 200ms;
-      user-select: none;
+      display: flex;
+      padding: 0 20px;
+      height: 21em;
+      overflow: hidden;
     }
 
-    main:active {
-      transform: scale(.9);
+    main > .content {
+      position: relative;
+      flex-grow: 1;
+      padding-right: 10px;
+      height: fit-content;
+    }
+
+    main > .scroll {
+      position: relative;
+      width: 120px;
+      background-color: #333;
+    }
+
+    .scroll > .scroll--thumb {
+      position: absolute;
+      background-color: #ddd;
+      height: 50%;
+      width: 100%;
+      cursor: move;
+    }
+
+    .scroll > .scroll--thumb:active {
+      transform: scale(1.05);
     }
   </style>
   <script>
@@ -64,25 +80,123 @@
 </head>
 
 <body>
-  <main>click me</main>
+  <main class="container">
+    <section class="content">
+      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias, animi, atque blanditiis consectetur
+        consequatur dolore doloremque eius fugiat incidunt, laboriosam mollitia natus nobis nostrum quia quo quos sit
+        velit veritatis!</p>
+    </section>
+    <section class="scroll">
+      <div class="scroll--thumb"></div>
+    </section>
+  </main>
   <script>
+    function DraggableManager() {
+      function Draggable(elem, cbDragStart, cbDragEnd, cbDragMove) {
+        this.elem = elem;
+        this.cbDragStart = cbDragStart;
+        this.cbDragEnd = cbDragEnd;
+        this.cbDragMove = cbDragMove;
+        this.dragging = false;
+        this.lastMousePos = { x: 0, y: 0 };
+        this.dragKey = NaN;
+        this.onDragStart = function (e) {
+          if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
+            return;
+          }
+          if (this.dragging) {
+            return;
+          }
 
-    function debounceNaive(callback, waitMilliSec = 400) {
-      let timer;
-      return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => callback(...args), waitMilliSec);
+          this.dragKey = e.button;
+          this.dragging = true;
+          this.elem.dataset.dgDragging = this.dragging;
+          this.lastMousePos.x = e.clientX;
+          this.lastMousePos.y = e.clientY;
+          this.cbDragStart && this.cbDragStart();
+        };
+        this.onDragMove = function (e) {
+          if (!this.dragging) {
+            return;
+          }
+
+          const posDiff = {
+            x: e.clientX - this.lastMousePos.x,
+            y: e.clientY - this.lastMousePos.y
+          };
+          this.lastMousePos.x = e.clientX;
+          this.lastMousePos.y = e.clientY;
+          const oldPos = {
+            x: this.elem.offsetLeft,
+            y: this.elem.offsetTop
+          };
+          let newPos = { ...oldPos };
+          newPos.x += posDiff.x;
+          newPos.y += posDiff.y;
+
+          if (this.cbDragMove) {
+            newPos = this.cbDragMove(oldPos, newPos) ?? newPos;
+          }
+
+          this.elem.style.top = newPos.y + "px";
+          this.elem.style.left = newPos.x + "px";
+        };
+        this.onDragEnd = function (e) {
+          if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
+            return;
+          }
+          if (!this.dragging) {
+            return;
+          }
+          this.dragKey = NaN;
+          this.dragging = false;
+          this.elem.dataset.dgDragging = this.dragging;
+          this.cbDragEnd && this.cbDragEnd();
+        };
+
+        listenEvent(elem, "mousedown", this.onDragStart.bind(this));
+        listenEvent(elem, "mousemove", this.onDragMove.bind(this), { passive: true });
+        listenEvent(elem, "mouseup", this.onDragEnd.bind(this));
+        listenEvent(elem, "mouseout", this.onDragEnd.bind(this));
+      }
+
+      this.draggableList = [];
+      this.addDraggable = function (...args) {
+        this.draggableList.push(new Draggable(...args));
       };
     }
+  </script>
+  <script>
+    const dragMgr = new DraggableManager();
+    const oContent = document.querySelector(".content");
+    oContent.innerHTML = new Array(10).fill(oContent.innerHTML).join("");
+    const oScrollThumb = document.querySelector(".scroll > .scroll--thumb");
+    const viewH = document.querySelector(".container").offsetHeight;
+    const scrollH = oContent.offsetHeight - viewH;
+    const r = scrollH < 0 ? 1 : viewH / scrollH;
+    const scrollBarH = oScrollThumb.parentElement.offsetHeight;
+    const scrollThumbH = r * scrollBarH;
+    const scrollThumbMaxDeltaY = scrollBarH - scrollThumbH;
 
-    let triggerCount = 0;
-    const m = document.querySelector("main");
-    listenEvent(m, "wheel", debounceNaive((e) => {
-      ++triggerCount;
-      m.textContent = `count: ${triggerCount}`;
-      console.log(e);
-    }), { passive: true });
+    oScrollThumb.style.height = `${scrollThumbH}px`;
 
+    function pipe(...fnList) {
+      return (...args) => fnList.reduce((returnV, fn) => fn(...args) ?? returnV, undefined);
+    }
+
+    function moveOnlyY(oldPos, newPos) {
+      return { x: oldPos.x, y: newPos.y };
+    }
+
+    function boundedY(oldPos, newPos) {
+      return { x: oldPos.x, y: Math.max(0, Math.min(scrollThumbMaxDeltaY, newPos.y)) };
+    }
+
+    function scrollContent() {
+      oContent.style.top = `-${scrollH * oScrollThumb.offsetTop / scrollThumbMaxDeltaY}px`;
+    }
+
+    dragMgr.addDraggable(oScrollThumb, null, null, pipe(moveOnlyY, boundedY, scrollContent));
   </script>
 </body>
 </html>
