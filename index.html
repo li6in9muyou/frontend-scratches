@@ -33,7 +33,7 @@
       background-color: limegreen;
       border-radius: 8px;
       cursor: move;
-      transition-duration: 200ms;
+      transition: 300ms ease-in-out;
       font-size: 64px;
       line-height: 100px;
       text-align: center;
@@ -176,23 +176,29 @@
       };
     }
 
-    function boxOnDragEnd(box) {
-      function moveBoxToSlot(box, slotIdx) {
-        var [slotX, slotY] = boxSlots[+slotIdx];
+    function moveBoxToSlot(box, slotIdx) {
+      boxSlotTable[+box.dataset.boxId] = +slotIdx;
+    }
+
+    function getSlotId(box) {
+      return boxSlotTable[+box.dataset.boxId];
+    }
+
+    function reflowBoxes() {
+      aBox.forEach(box => {
+        const boxSlotId = getSlotId(box);
+        console.assert(0 <= boxSlotId && boxSlotId < boxSlots.length,
+          "reflowBoxes: invalid slot id", boxSlotId, boxSlots);
+        const [slotX, slotY] = boxSlots[getSlotId(box)];
         box.style.top = slotY + "px";
         box.style.left = slotX + "px";
-        boxSlotTable[+box.dataset.boxId] = +slotIdx;
-      }
+      });
+    }
 
+    function boxOnDragEnd(box) {
       return () => {
-        var d = document.querySelector(".box__collided");
-        if (d !== null) {
-          const dragTo = boxSlotTable[+d.dataset.boxId];
-          const dragFrom = boxSlotTable[+box.dataset.boxId];
-          moveBoxToSlot(box, dragTo);
-          moveBoxToSlot(d, dragFrom);
-        }
         boxOnDragStart(box)();
+        reflowBoxes();
       };
     }
 
@@ -223,11 +229,37 @@
           others.forEach(other => other.classList.remove("box__collided"));
           if (collidedBox) {
             collidedBox.classList.add("box__collided");
+            return collidedBox;
+          } else {
+            return null;
           }
         };
       }
 
-      return markCollidedBox(box, aBox.filter(b => b !== box));
+      return () => {
+        const dragTo = markCollidedBox(box, aBox.filter(b => b !== box))();
+        if (dragTo !== null) {
+          const dragToSlot = boxSlotTable[+dragTo.dataset.boxId];
+          const origSlot = boxSlotTable[+box.dataset.boxId];
+          if (origSlot > dragToSlot) {
+            aBox.filter(b => b !== box)
+              .filter(other => {
+                const needRelocate = getSlotId(other);
+                return dragToSlot <= needRelocate && needRelocate < origSlot;
+              })
+              .forEach(relocatingBox => moveBoxToSlot(relocatingBox, getSlotId(relocatingBox) + 1));
+          } else {
+            aBox.filter(b => b !== box)
+              .filter(other => {
+                const needRelocate = getSlotId(other);
+                return origSlot < needRelocate && needRelocate <= dragToSlot;
+              })
+              .forEach(box => moveBoxToSlot(box, getSlotId(box) - 1));
+          }
+          moveBoxToSlot(box, dragToSlot);
+          reflowBoxes();
+        }
+      };
     }
 
     var aBox = Array.from(document.querySelectorAll(".box"));
