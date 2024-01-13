@@ -27,39 +27,13 @@
       align-items: center;
     }
 
-    .box {
-      width: 200px;
-      height: 100px;
+    main {
       background-color: limegreen;
-      border-radius: 8px;
-      cursor: move;
-      transition: 300ms ease-in-out;
-      font-size: 64px;
-      line-height: 100px;
+      width: 500px;
+      height: 500px;
+      font-size: 50px;
+      line-height: 500px;
       text-align: center;
-      user-select: none;
-    }
-
-    .box__lifted {
-      transform: scale(1.05);
-      box-shadow: 3px 3px 6px #222;
-      z-index: 100;
-      transition: none;
-    }
-
-    .box__collided {
-      background-color: crimson;
-    }
-
-    .box-wrap {
-      position: relative;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      width: calc(200px * 3 + 20px * 2 + 20px * 2 + 4px * 2);
-      padding: 20px;
-      border: solid 4px lightgreen;
-      border-radius: 8px;
     }
   </style>
   <script>
@@ -83,225 +57,57 @@
 </head>
 
 <body>
-  <ul class="box-wrap">
-    <li class="box">1</li>
-    <li class="box">2</li>
-    <li class="box">3</li>
-    <li class="box">4</li>
-    <li class="box">5</li>
-    <li class="box">6</li>
-    <li class="box">7</li>
-    <li class="box">8</li>
-    <li class="box">9</li>
-    <li class="box">10</li>
-    <li class="box">11</li>
-    <li class="box">12</li>
-  </ul>
+  <main>move mouse in</main>
   <script>
-
-    function DraggableManager() {
-      function Draggable(elem, cbDragStart, cbDragEnd, cbDragMove) {
-        this.elem = elem;
-        this.cbDragStart = cbDragStart;
-        this.cbDragEnd = cbDragEnd;
-        this.cbDragMove = cbDragMove;
-        this.dragging = false;
-        this.lastMousePos = { x: 0, y: 0 };
-        this.dragKey = NaN;
-        this.onDragStart = function (e) {
-          if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
-            return;
-          }
-          if (this.dragging) {
-            return;
-          }
-
-          this.dragKey = e.button;
-          this.dragging = true;
-          this.elem.dataset.dgDragging = this.dragging;
-          this.lastMousePos.x = e.clientX;
-          this.lastMousePos.y = e.clientY;
-          this.cbDragStart && this.cbDragStart();
-        };
-        this.onDragMove = function (e) {
-          if (!this.dragging) {
-            return;
-          }
-
-          const posDiff = {
-            x: e.clientX - this.lastMousePos.x,
-            y: e.clientY - this.lastMousePos.y
-          };
-          this.lastMousePos.x = e.clientX;
-          this.lastMousePos.y = e.clientY;
-          const newPos = {
-            x: this.elem.offsetLeft,
-            y: this.elem.offsetTop
-          };
-          newPos.x += posDiff.x;
-          newPos.y += posDiff.y;
-          this.elem.style.top = newPos.y + "px";
-          this.elem.style.left = newPos.x + "px";
-          this.cbDragMove && this.cbDragMove(newPos.x, newPos.y);
-        };
-        this.onDragEnd = function (e) {
-          if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
-            return;
-          }
-          if (!this.dragging) {
-            return;
-          }
-          this.dragKey = NaN;
-          this.dragging = false;
-          this.elem.dataset.dgDragging = this.dragging;
-          this.cbDragEnd && this.cbDragEnd();
-        };
-
-        listenEvent(elem, "mousedown", this.onDragStart.bind(this));
-        listenEvent(elem, "mousemove", this.onDragMove.bind(this), { passive: true });
-        listenEvent(elem, "mouseup", this.onDragEnd.bind(this));
-        listenEvent(elem, "mouseout", this.onDragEnd.bind(this));
-      }
-
-      this.draggableList = [];
-      this.addDraggable = function (...args) {
-        this.draggableList.push(new Draggable(...args));
-      };
-    }
-
-    function boxOnDragStart(box) {
-      return () => {
-        aBox.forEach(box => box.classList.remove("box__collided"));
-        box.classList.toggle("box__lifted");
-      };
-    }
-
-    function moveBoxToSlot(box, slotIdx) {
-      boxSlotTable[+box.dataset.boxId] = +slotIdx;
-    }
-
-    function getSlotId(box) {
-      return boxSlotTable[+box.dataset.boxId];
-    }
-
-    function reflowBoxes(boxes) {
-      boxes.forEach(box => {
-        const boxSlotId = getSlotId(box);
-        console.assert(0 <= boxSlotId && boxSlotId < boxSlots.length,
-          "reflowBoxes: invalid slot id", boxSlotId, boxSlots);
-        const [slotX, slotY] = boxSlots[getSlotId(box)];
-        box.style.top = slotY + "px";
-        box.style.left = slotX + "px";
-      });
-    }
-
-    function boxOnDragEnd(box) {
-      return () => {
-        boxOnDragStart(box)();
-        reflowBoxes(aBox);
-      };
-    }
-
-    function boxOnDragMove(box) {
-      function findCollidedBox(me, others) {
-        let collidedBox = null, minCenterDistSqr = Number.MAX_SAFE_INTEGER;
-        // find collided boxes
-        // if multiple boxes are found
-        // return the one whose center is closest to the center of the dragging box
-        for (const other of others) {
-          const t1 = me.offsetTop, t2 = other.offsetTop;
-          const l1 = me.offsetLeft, l2 = other.offsetLeft;
-          const r1 = l1 + me.offsetWidth, r2 = l2 + other.offsetWidth;
-          const b1 = t1 + me.offsetHeight, b2 = t2 + other.offsetHeight;
-          const noCollision = t1 > b2 || r1 < l2 || b1 < t2 || l1 > r2;
-          if (!noCollision) {
-            const c1X = (l1 + r1) / 2;
-            const c1Y = (t1 + b1) / 2;
-            const c2X = (l2 + r2) / 2;
-            const c2Y = (t2 + b2) / 2;
-            const centerDistanceSqr = (c1X - c2X) * (c1X - c2X) + (c1Y - c2Y) * (c1Y - c2Y);
-            if (centerDistanceSqr < minCenterDistSqr) {
-              minCenterDistSqr = centerDistanceSqr;
-              collidedBox = other;
-            }
-          }
-        }
-        return collidedBox;
-      }
-
-      function markCollidedBox(bb) {
-        aBox.forEach(other => other.classList.remove("box__collided"));
-        if (bb === null) {
-          return;
-        }
-        bb.classList.add("box__collided");
-      }
-
-      return () => {
-        const others = aBox.filter(b => b !== box);
-        const dragTo = findCollidedBox(box, others);
-        markCollidedBox(dragTo);
-
-        if (dragTo !== null && relocationThrottle.canDo()) {
-          const dragToSlot = boxSlotTable[+dragTo.dataset.boxId];
-          const origSlot = boxSlotTable[+box.dataset.boxId];
-          if (origSlot > dragToSlot) {
-            others.filter(other => {
-              const needRelocate = getSlotId(other);
-              return dragToSlot <= needRelocate && needRelocate < origSlot;
-            }).forEach(relocatingBox => moveBoxToSlot(relocatingBox, getSlotId(relocatingBox) + 1));
-          } else {
-            others.filter(other => {
-              const needRelocate = getSlotId(other);
-              return origSlot < needRelocate && needRelocate <= dragToSlot;
-            }).forEach(box => moveBoxToSlot(box, getSlotId(box) - 1));
-          }
-          moveBoxToSlot(box, dragToSlot);
-          reflowBoxes(others);
+    function throttleTimeStamp(callback, intervalMilliSec = 100) {
+      let lastExec = 0;
+      return (...args) => {
+        if (Date.now() - lastExec > intervalMilliSec) {
+          callback(...args);
+          lastExec = Date.now();
         }
       };
     }
 
-    function Throttler(minIntervalMilliSec) {
-      this.ok = true;
-      this.timer = null;
-      this.minIntervalMilliSec = minIntervalMilliSec;
-      this.canDo = function () {
-        const oldOk = this.ok;
-        this.ok = false;
-        if (this.timer === null) {
-          setTimeout(() => {
-            this.ok = true;
-            this.timer = null;
-          }, this.minIntervalMilliSec);
+    const throttleAnimationFrame = (fn) => {
+      let frame;
+      return (...args) => {
+        if (frame) {
+          cancelAnimationFrame(frame);
         }
-        return oldOk;
+        frame = requestAnimationFrame(() => {
+          fn(...args);
+        });
+      };
+    };
+
+    function throttleTimeout(callback, intervalMilliSec = 100) {
+      let canExec = true;
+      return (...args) => {
+        if (canExec) {
+          canExec = false;
+          setTimeout(() => canExec = true, intervalMilliSec);
+          callback(...args);
+        }
       };
     }
 
-    const aBox = Array.from(document.querySelectorAll(".box"));
-    const oBoxWrap = document.querySelector(".box-wrap");
-    const dMgr = new DraggableManager();
-    const relocationThrottle = new Throttler(500);
-    const boxSlots = [];
-    const boxSlotTable = [];
-
-    aBox.forEach((box) => dMgr.addDraggable(
-      box,
-      boxOnDragStart(box),
-      boxOnDragEnd(box),
-      boxOnDragMove(box)
-    ));
-    oBoxWrap.style.height = oBoxWrap.offsetHeight + "px";
-    oBoxWrap.style.width = oBoxWrap.offsetWidth + "px";
-    aBox.forEach((box, idx) => {
-      box.style.top = box.offsetTop + "px";
-      box.style.left = box.offsetLeft + "px";
-      boxSlots.push([box.offsetLeft, box.offsetTop]);
-      boxSlotTable.push(idx);
-      box.dataset.boxId = idx.toString();
+    let triggerCount = [0, 0, 0, 0];
+    const m = document.querySelector("main");
+    listenEvent(m, "mousemove", (e) => {
+      m.textContent = `x:${e.clientX},y:${e.clientY}`;
+      ++triggerCount[0];
     });
-    aBox.forEach((box) => box.style.position = "absolute");
+    listenEvent(m, "mousemove", throttleTimeout(() => {
+      ++triggerCount[1];
+    }));
+    listenEvent(m, "mousemove", throttleTimeStamp(() => {
+      ++triggerCount[2];
+    }));
+    listenEvent(m, "mousemove", throttleAnimationFrame(() => {
+      ++triggerCount[3];
+    }));
+
   </script>
 </body>
 </html>
