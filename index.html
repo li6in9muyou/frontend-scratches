@@ -205,6 +205,9 @@
     function boxOnDragMove(box) {
       function findCollidedBox(me, others) {
         let collidedBox = null, minCenterDistSqr = Number.MAX_SAFE_INTEGER;
+        // find collided boxes
+        // if multiple boxes are found
+        // return the one whose center is closest to the center of the dragging box
         for (const other of others) {
           const t1 = me.offsetTop, t2 = other.offsetTop;
           const l1 = me.offsetLeft, l2 = other.offsetLeft;
