@@ -4,207 +4,24 @@
   <meta charset="UTF-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>Scratch</title>
-  <style>
-    * {
-      padding: 0;
-      margin: 0;
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      height: 100%;
-      background-color: #888;
-    }
-
-    li {
-      list-style: none;
-    }
-
-    body {
-      display: flex;
-      justify-content: center;
-      padding-top: 100px;
-    }
-
-    main {
-      display: flex;
-      padding: 0 20px;
-      height: 21em;
-      overflow: hidden;
-      max-width: 600px;
-    }
-
-    main > .content {
-      position: relative;
-      flex-grow: 1;
-      padding-right: 10px;
-      height: fit-content;
-    }
-
-    main > .scroll {
-      flex-shrink: 0;
-      position: relative;
-      width: 28px;
-      background-color: #333;
-    }
-
-    .scroll > .scroll--thumb {
-      position: absolute;
-      background-color: #ddd;
-      height: 50%;
-      width: 100%;
-      cursor: move;
-    }
-
-    .scroll > .scroll--thumb:active {
-      transform: scaleX(1.2);
-    }
-  </style>
-  <script>
-    function listenEvent(elem, event, callback, ...args) {
-      let removeListener;
-      if (elem.addEventListener) {
-        elem.addEventListener(event, callback, ...args);
-        removeListener = function () {
-          elem.removeEventListener(event, callback);
-        };
-      } else {
-        // IE 9
-        elem.attachEvent("on" + event);
-        removeListener = function () {
-          elem.detachEvent("on" + event, callback);
-        };
-      }
-      return removeListener;
-    }
-  </script>
 </head>
 
 <body>
-  <main class="container">
-    <section class="content">
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias, animi, atque blanditiis consectetur
-        consequatur dolore doloremque eius fugiat incidunt, laboriosam mollitia natus nobis nostrum quia quo quos sit
-        velit veritatis!</p>
-    </section>
-    <section class="scroll">
-      <div class="scroll--thumb"></div>
-    </section>
-  </main>
   <script>
-    function DraggableManager() {
-      function Draggable(elem, cbDragStart, cbDragEnd, cbDragMove) {
-        this.elem = elem;
-        this.cbDragStart = cbDragStart;
-        this.cbDragEnd = cbDragEnd;
-        this.cbDragMove = cbDragMove;
-        this.dragging = false;
-        this.lastMousePos = { x: 0, y: 0 };
-        this.dragKey = NaN;
-        this.onDragStart = function (e) {
-          if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
-            return;
-          }
-          if (this.dragging) {
-            return;
-          }
+    (function () {
+      let i = 0;
 
-          this.dragKey = e.button;
-          this.dragging = true;
-          this.elem.dataset.dgDragging = this.dragging;
-          this.lastMousePos.x = e.clientX;
-          this.lastMousePos.y = e.clientY;
-          this.cbDragStart && this.cbDragStart();
-        };
-        this.onDragMove = function (e) {
-          if (!this.dragging) {
-            return;
-          }
-
-          const posDiff = {
-            x: e.clientX - this.lastMousePos.x,
-            y: e.clientY - this.lastMousePos.y
-          };
-          this.lastMousePos.x = e.clientX;
-          this.lastMousePos.y = e.clientY;
-          const oldPos = {
-            x: this.elem.offsetLeft,
-            y: this.elem.offsetTop
-          };
-          let newPos = { ...oldPos };
-          newPos.x += posDiff.x;
-          newPos.y += posDiff.y;
-
-          if (this.cbDragMove) {
-            newPos = this.cbDragMove(oldPos, newPos) ?? newPos;
-          }
-
-          this.elem.style.top = newPos.y + "px";
-          this.elem.style.left = newPos.x + "px";
-        };
-        this.onDragEnd = function (e) {
-          if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
-            return;
-          }
-          if (!this.dragging) {
-            return;
-          }
-          this.dragKey = NaN;
-          this.dragging = false;
-          this.elem.dataset.dgDragging = this.dragging;
-          this.cbDragEnd && this.cbDragEnd();
-        };
-
-        listenEvent(elem, "mousedown", this.onDragStart.bind(this));
-        listenEvent(document, "mousemove", this.onDragMove.bind(this), { passive: true });
-        listenEvent(document, "mouseup", this.onDragEnd.bind(this));
+      function recurse() {
+        if (i >= 2) {
+          return;
+        }
+        console.log(i++);
+        setTimeout(() => console.log("recurse setTimeout 0"), 0);
+        recurse();
       }
 
-      this.draggableList = [];
-      this.addDraggable = function (...args) {
-        this.draggableList.push(new Draggable(...args));
-      };
-    }
-  </script>
-  <script>
-    const dragMgr = new DraggableManager();
-    const oContent = document.querySelector(".content");
-    oContent.innerHTML = new Array(10).fill(oContent.innerHTML).join("");
-    const oScrollThumb = document.querySelector(".scroll > .scroll--thumb");
-    const viewH = document.querySelector(".container").offsetHeight;
-    const scrollBarH = oScrollThumb.parentElement.offsetHeight;
-    const scrollThumbH = scrollBarH * viewH / oContent.offsetHeight;
-    const scrollThumbMaxDeltaY = scrollBarH - scrollThumbH;
-
-    oScrollThumb.style.height = `${scrollThumbH}px`;
-
-    function pipe(...fnList) {
-      return (...args) => fnList.reduce((returnV, fn) => fn(...args) ?? returnV, undefined);
-    }
-
-    function moveOnlyY(oldPos, newPos) {
-      return { x: oldPos.x, y: newPos.y };
-    }
-
-    function clamp(v, min, max) {
-      return Math.max(min, Math.min(max, v));
-    }
-
-    function boundedY(oldPos, newPos) {
-      return { x: oldPos.x, y: clamp(newPos.y, 0, scrollThumbMaxDeltaY) };
-    }
-
-    function scrollContent() {
-      oContent.style.top = `-${(oContent.offsetHeight - viewH) * oScrollThumb.offsetTop / scrollThumbMaxDeltaY}px`;
-    }
-
-    dragMgr.addDraggable(oScrollThumb, null, null, pipe(moveOnlyY, boundedY, scrollContent));
-
-    listenEvent(oContent, "wheel", (e) => {
-      oScrollThumb.style.top = `${clamp(oScrollThumb.offsetTop + e.deltaY * 0.2, 0, scrollThumbMaxDeltaY)}px`;
-      scrollContent();
-    }, { passive: true });
+      recurse();
+    })();
   </script>
 </body>
 </html>
