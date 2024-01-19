@@ -8,18 +8,24 @@
 
 <body>
   <script>
-    function evalSubtractionTree(root) {
-      if (typeof root === "number") {
-        return root;
+    function transpose(mtx) {
+      const rowCnt = mtx.length;
+      const colCnt = mtx[0].length;
+      const transposed = [];
+      for (let r = 0; r < colCnt; r++) {
+        transposed.push(new Array(rowCnt).fill(0));
       }
 
-      return root.reduce((ans, node, idx) => {
-        ans += idx === 0 ? evalSubtractionTree(node) : -evalSubtractionTree(node);
-        return ans;
-      }, 0);
+      for (let r = 0; r < rowCnt; r++) {
+        for (let c = 0; c < colCnt; c++) {
+          transposed[c][r] = mtx[r][c];
+        }
+      }
+      return transposed;
     }
 
-    console.log(evalSubtractionTree([5, [[4, 3], 2, 1]]));
+    console.log(transpose([[1, 2, 3], [4, 5, 6]]));
+    console.log(transpose([[1]]));
   </script>
 </body>
 </html>
