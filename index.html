@@ -8,24 +8,25 @@
 
 <body>
   <script>
-    function mergeArr(arr, predicate) {
-      return arr.reduce((ans, x) => {
-        if (predicate(x)) {
-          const back = ans[ans.length - 1];
-          if (Array.isArray(back)) {
-            back.push(x);
-          } else {
-            ans.push([x]);
-          }
-        } else {
-          ans.push(x);
+    const openingParen = "([{";
+    const closingParen = ")]}";
+
+    function hasClose(text) {
+      const stack = [];
+      for (const paren of text) {
+        const top = stack[stack.length - 1];
+        if (-1 !== openingParen.indexOf(paren)) {
+          stack.push(paren);
+        } else if (openingParen.indexOf(top) === closingParen.indexOf(paren)) {
+          stack.pop();
         }
-        return ans;
-      }, []);
+      }
+      return stack.length === 0;
     }
 
-    console.log(mergeArr([1, 2, 3, 4, 5], (item) => item > 3));
-    console.log(mergeArr([1, 2, 3, 4, 5], (item) => item !== 2));
+    console.log(hasClose("()[()]{}")); // true
+    console.log(hasClose("([{([])}])")); //true
+    console.log(hasClose("[{]}")); //false
   </script>
 </body>
 </html>
