@@ -8,20 +8,18 @@
 
 <body>
   <script>
-    (function () {
-      let i = 0;
-
-      function recurse() {
-        if (i >= 2) {
-          return;
-        }
-        console.log(i++);
-        setTimeout(() => console.log("recurse setTimeout 0"), 0);
-        recurse();
+    function evalSubtractionTree(root) {
+      if (typeof root === "number") {
+        return root;
       }
 
-      recurse();
-    })();
+      return root.reduce((ans, node, idx) => {
+        ans += idx === 0 ? evalSubtractionTree(node) : -evalSubtractionTree(node);
+        return ans;
+      }, 0);
+    }
+
+    console.log(evalSubtractionTree([5, [[4, 3], 2, 1]]));
   </script>
 </body>
 </html>
