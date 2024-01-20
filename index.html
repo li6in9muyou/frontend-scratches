@@ -18,7 +18,7 @@
           if (Array.isArray(val)) {
             newPrefix = `${prefix}[${objKey}]`;
           } else if (typeof val === "object") {
-            newPrefix = `${prefix}.${objKey}`;
+            newPrefix = prefix === "" ? objKey.toString() : `${prefix}.${objKey}`;
           }
           flatObj(v, result, newPrefix);
         }
