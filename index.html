@@ -8,25 +8,46 @@
 
 <body>
   <script>
-    const openingParen = "([{";
-    const closingParen = ")]}";
-
-    function hasClose(text) {
-      const stack = [];
-      for (const paren of text) {
-        const top = stack[stack.length - 1];
-        if (-1 !== openingParen.indexOf(paren)) {
-          stack.push(paren);
-        } else if (openingParen.indexOf(top) === closingParen.indexOf(paren)) {
-          stack.pop();
+    function flatObj(val, result = {}, prefix = "") {
+      if (typeof val === "number" || typeof val === "string") {
+        result[prefix] = val;
+      } else {
+        for (const objKey in val) {
+          const v = val[objKey];
+          let newPrefix;
+          if (Array.isArray(val)) {
+            newPrefix = `${prefix}[${objKey}]`;
+          } else if (typeof val === "object") {
+            newPrefix = `${prefix}.${objKey}`;
+          }
+          flatObj(v, result, newPrefix);
         }
       }
-      return stack.length === 0;
+      return result;
     }
 
-    console.log(hasClose("()[()]{}")); // true
-    console.log(hasClose("([{([])}])")); //true
-    console.log(hasClose("[{]}")); //false
+    let obj = {
+      key1: "zsq",
+      key2: "zsq2",
+      key3: [
+        1,
+        2,
+        3,
+        4,
+        5,
+        {
+          name: "test"
+        }
+      ],
+      key4: {
+        child1: "1",
+        child2: "2"
+      }
+    };
+
+    console.log(flatObj(obj));
+    console.log(flatObj({}));
+    console.log(flatObj([99, [100, 101]]));
   </script>
 </body>
 </html>
