@@ -8,46 +8,16 @@
 
 <body>
   <script>
-    function flatObj(val, result = {}, prefix = "") {
-      if (typeof val === "number" || typeof val === "string") {
-        result[prefix] = val;
-      } else {
-        for (const objKey in val) {
-          const v = val[objKey];
-          let newPrefix;
-          if (Array.isArray(val)) {
-            newPrefix = `${prefix}[${objKey}]`;
-          } else if (typeof val === "object") {
-            newPrefix = prefix === "" ? objKey.toString() : `${prefix}.${objKey}`;
-          }
-          flatObj(v, result, newPrefix);
-        }
+    function pow(n, k) {
+      if (k === 0) {
+        return 1;
       }
-      return result;
+      return n * pow(n, k - 1);
     }
 
-    let obj = {
-      key1: "zsq",
-      key2: "zsq2",
-      key3: [
-        1,
-        2,
-        3,
-        4,
-        5,
-        {
-          name: "test"
-        }
-      ],
-      key4: {
-        child1: "1",
-        child2: "2"
-      }
-    };
-
-    console.log(flatObj(obj));
-    console.log(flatObj({}));
-    console.log(flatObj([99, [100, 101]]));
+    console.log(pow(2, 6));
+    console.log(pow(2, 11));
+    console.log(pow(2, 0));
   </script>
 </body>
 </html>
