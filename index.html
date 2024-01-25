@@ -8,21 +8,22 @@
 
 <body>
   <script>
-    function thirdOrderFibonacci(n) {
-      if (n === 1) {
-        return 1;
-      }
+    const bigArr = new Array(1e3).fill(null).map(() => Math.random());
 
-      if (n < 1) {
-        return 0;
+    console.time("bigArr.length");
+    for (let i = 0; i < 1e5; i++) {
+      for (let idx = 0; idx < bigArr.length; idx++) {
       }
-
-      return thirdOrderFibonacci(n - 1) + thirdOrderFibonacci(n - 2) + thirdOrderFibonacci(n - 3);
     }
+    console.timeEnd("bigArr.length");
 
-    console.log(thirdOrderFibonacci(1));
-    console.log(thirdOrderFibonacci(5));
-    console.log(thirdOrderFibonacci(8));
+    console.time("const len = bigArr.length");
+    const len = bigArr.length;
+    for (let i = 0; i < 1e5; i++) {
+      for (let idx = 0; idx < len; idx++) {
+      }
+    }
+    console.timeEnd("const len = bigArr.length");
   </script>
 </body>
 </html>
