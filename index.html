@@ -8,22 +8,23 @@
 
 <body>
   <script>
-    const bigArr = new Array(1e3).fill(null).map(() => Math.random());
-
-    console.time("bigArr.length");
-    for (let i = 0; i < 1e5; i++) {
-      for (let idx = 0; idx < bigArr.length; idx++) {
+    function fib(x) {
+      if (x === 0) {
+        return 0;
       }
-    }
-    console.timeEnd("bigArr.length");
-
-    console.time("const len = bigArr.length");
-    const len = bigArr.length;
-    for (let i = 0; i < 1e5; i++) {
-      for (let idx = 0; idx < len; idx++) {
+      if (x === 1) {
+        return 1;
       }
+      return fib(x - 1) + fib(x - 2);
     }
-    console.timeEnd("const len = bigArr.length");
+
+    function timeit(x) {
+      console.time(`fib(${x})`);
+      console.log(fib(x));
+      console.timeEnd(`fib(${x})`);
+    }
+
+    timeit(10);
   </script>
 </body>
 </html>
