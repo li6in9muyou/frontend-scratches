@@ -4,58 +4,49 @@
   <meta charset="UTF-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>Scratch</title>
+  <link rel="stylesheet/less" type="text/css" href="less/styles.less"/>
+  <script src="https://cdn.staticfile.net/less.js/4.2.0/less.js"></script>
 </head>
 
 <body>
+  <header>
+    <i class="btn"><</i>
+    <h1>产品签约</h1>
+  </header>
+  <main class="product-list-wrap">
+    <section class="product-list-title">
+      <h2>产品名称</h2>
+      <h2>产品费率</h2>
+    </section>
+    <section class="product-list">
+      <div class="product">
+        <div class="product-id">
+          <i class="product-icon" data-icon="images/icon-1.png"></i>
+          <span class="product-name">微信支付</span>
+        </div>
+        <div class="product-rates">0.32%</div>
+      </div>
+      <div class="product">
+        <div class="product-id">
+          <i class="product-icon" data-icon="images/icon-1.png"></i>
+          <span class="product-name">微信支付</span>
+        </div>
+        <div class="product-rates">0.32%</div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    线上产品费率不同，详情请咨询：400-0000-0000
+  </footer>
+
+  <script src="js/jquery.js"></script>
   <script>
-    function doIf(x) {
-      if (x === 0) {
-        return 0;
-      } else if (x === 10) {
-        return 1;
-      } else {
-        return x;
-      }
-    }
-
-    function timeitDoIf(n = 100) {
-      console.time(`${n} x doIf()`);
-      for (let i = 0; i < n; i++) {
-        if (!!(i % 2)) {
-          doIf(i);
-        } else {
-          doIf({ i });
-        }
-      }
-      console.timeEnd(`${n} x doIf()`);
-    }
-
-    timeitDoIf(1e8);
-
-    function doSwitch(x) {
-      switch (x) {
-        case 0:
-          return 0;
-        case 10:
-          return 1;
-        default:
-          return x;
-      }
-    }
-
-    function timeitDoSwitch(n = 100) {
-      console.time(`${n} x doSwitch()`);
-      for (let i = 0; i < n; i++) {
-        if (!!(i % 2)) {
-          doSwitch(i);
-        } else {
-          doSwitch({ i });
-        }
-      }
-      console.timeEnd(`${n} x doSwitch()`);
-    }
-
-    timeitDoSwitch(1e8);
+    $("[data-icon]").each(function () {
+      const i = $(this);
+      i.css({
+        "background-image": `url(${i.attr("data-icon")})`,
+      });
+    });
   </script>
 </body>
 </html>

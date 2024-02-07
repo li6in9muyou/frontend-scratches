@@ -1,0 +1,119 @@
+@COLOR_CONTENT_BG: #303030;
+@COLOR_CONTENT_ACCENT: #e52e52;
+@COLOR_CONTENT_BG_PRIMARY: #fff;
+@COLOR_BG: #fafafe;
+@COLOR_TEXT: #222;
+@COLOR_TEXT_SECONDARY: #a0a0a0;
+@COLOR_BORDER: #eee;
+@COLOR_BORDER_DARKER: #e9e9e9;
+@PADDING_MAIN_CONTENT: 4.67vw;
+
+:root {
+  background-color: @COLOR_BG;
+  color: @COLOR_TEXT;
+}
+
+i {
+  font-style: unset;
+}
+
+body {
+  margin: 0;
+}
+
+header {
+  position: relative;
+  text-align: center;
+  padding: 3.47vw 0;
+  background-color: @COLOR_CONTENT_BG_PRIMARY;
+
+  .btn {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    line-height: 4.53vw;
+    font-weight: bold;
+    display: flex;
+    font-size: 6vw;
+    align-items: center;
+    justify-content: center;
+    padding: 0 2vw 0 6vw;
+  }
+
+  h1 {
+    font-weight: normal;
+    line-height: 4.53vw;
+    font-size: 4.53vw;
+    margin: 0;
+  }
+}
+
+.product-list-wrap {
+  background-color: @COLOR_CONTENT_BG_PRIMARY;
+
+  .product-list-title {
+    display: flex;
+    justify-content: space-between;
+    padding: 3.73vw @PADDING_MAIN_CONTENT;
+    border: solid 0.13vw @COLOR_BORDER;
+    color: @COLOR_TEXT_SECONDARY;
+    background-color: @COLOR_BG;
+
+    h2 {
+      margin: 0;
+      font-weight: normal;
+      font-size: 4.2vw;
+      flex-grow: 1;
+      text-align: center;
+    }
+  }
+
+  .product-list {
+    display: flex;
+    flex-direction: column;
+    padding: 0 4.27vw;
+
+    .product {
+      display: flex;
+      justify-content: space-between;
+      padding: @PADDING_MAIN_CONTENT 0;
+      border-bottom: solid 0.13vw @COLOR_BORDER_DARKER;
+
+      .product-id {
+        flex: 1;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .product-icon {
+          display: block;
+          width: 5.6vw;
+          height: 5.6vw;
+          background-size: contain;
+          background-position: center;
+        }
+
+        .product-name {
+          padding-left: 2.4vw;
+          font-size: 4.27vw;
+        }
+      }
+
+      .product-rates {
+        color: @COLOR_CONTENT_ACCENT;
+        flex: 1;
+        font-size: 4.8vw;
+        text-align: center;
+        font-family: sans-serif;
+      }
+    }
+  }
+}
+
+footer {
+  padding-top: 6.27vw;
+  color: @COLOR_TEXT_SECONDARY;
+  font-size: 3.48vw;
+  text-align: center;
+}
