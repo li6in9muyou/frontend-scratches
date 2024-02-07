@@ -8,23 +8,54 @@
 
 <body>
   <script>
-    function fib(x) {
+    function doIf(x) {
       if (x === 0) {
         return 0;
-      }
-      if (x === 1) {
+      } else if (x === 10) {
         return 1;
+      } else {
+        return x;
       }
-      return fib(x - 1) + fib(x - 2);
     }
 
-    function timeit(x) {
-      console.time(`fib(${x})`);
-      console.log(fib(x));
-      console.timeEnd(`fib(${x})`);
+    function timeitDoIf(n = 100) {
+      console.time(`${n} x doIf()`);
+      for (let i = 0; i < n; i++) {
+        if (!!(i % 2)) {
+          doIf(i);
+        } else {
+          doIf({ i });
+        }
+      }
+      console.timeEnd(`${n} x doIf()`);
     }
 
-    timeit(10);
+    timeitDoIf(1e8);
+
+    function doSwitch(x) {
+      switch (x) {
+        case 0:
+          return 0;
+        case 10:
+          return 1;
+        default:
+          return x;
+      }
+    }
+
+    function timeitDoSwitch(n = 100) {
+      console.time(`${n} x doSwitch()`);
+      for (let i = 0; i < n; i++) {
+        if (!!(i % 2)) {
+          doSwitch(i);
+        } else {
+          doSwitch({ i });
+        }
+      }
+      console.timeEnd(`${n} x doSwitch()`);
+    }
+
+    timeitDoSwitch(1e8);
   </script>
 </body>
 </html>
