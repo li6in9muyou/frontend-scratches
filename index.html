@@ -48,5 +48,14 @@
       });
     });
   </script>
+
+  <script>
+    const isPreferDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (isPreferDark) {
+      $(":root").attr("data-theme", "dark");
+    } else {
+      $(":root").attr("data-theme", "light");
+    }
+  </script>
 </body>
 </html>

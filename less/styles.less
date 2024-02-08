@@ -1,16 +1,29 @@
-@COLOR_CONTENT_BG: #303030;
-@COLOR_CONTENT_ACCENT: #e52e52;
-@COLOR_CONTENT_BG_PRIMARY: #fff;
-@COLOR_BG: #fafafe;
-@COLOR_TEXT: #222;
-@COLOR_TEXT_SECONDARY: #a0a0a0;
-@COLOR_BORDER: #eee;
-@COLOR_BORDER_DARKER: #e9e9e9;
-@PADDING_MAIN_CONTENT: 4.67vw;
+:root[data-theme="light"] {
+  --color-content-bg: #303030;
+  --color-content-accent: #e52e52;
+  --color-content-bg-primary: #fff;
+  --color-bg: #fafafe;
+  --color-text: #222;
+  --color-text-secondary: #a0a0a0;
+  --color-border: #eee;
+  --color-border-darker: #e9e9e9;
+}
+
+:root[data-theme="dark"] {
+  --color-content-bg: #303030;
+  --color-content-accent: #e52e52;
+  --color-content-bg-primary: #101010;
+  --color-bg: #030303;
+  --color-text: #fafafa;
+  --color-text-secondary: #a0a0a0;
+  --color-border: #1a1a1a;
+  --color-border-darker: #e9e9e9;
+}
 
 :root {
-  background-color: @COLOR_BG;
-  color: @COLOR_TEXT;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  --padding-main-content: 4.67vw;
 }
 
 i {
@@ -25,7 +38,7 @@ header {
   position: relative;
   text-align: center;
   padding: 3.47vw 0;
-  background-color: @COLOR_CONTENT_BG_PRIMARY;
+  background-color: var(--color-content-bg-primary);
 
   .btn {
     position: absolute;
@@ -49,15 +62,15 @@ header {
 }
 
 .product-list-wrap {
-  background-color: @COLOR_CONTENT_BG_PRIMARY;
+  background-color: var(--color-content-bg-primary);
 
   .product-list-title {
     display: flex;
     justify-content: space-between;
-    padding: 3.73vw @PADDING_MAIN_CONTENT;
-    border: solid 0.13vw @COLOR_BORDER;
-    color: @COLOR_TEXT_SECONDARY;
-    background-color: @COLOR_BG;
+    padding: 3.73vw var(--padding-main-content);
+    border: solid 0.13vw var(--color-border);
+    color: var(--color-text-secondary);
+    background-color: var(--color-bg);
 
     h2 {
       margin: 0;
@@ -76,8 +89,8 @@ header {
     .product {
       display: flex;
       justify-content: space-between;
-      padding: @PADDING_MAIN_CONTENT 0;
-      border-bottom: solid 0.13vw @COLOR_BORDER_DARKER;
+      padding: var(--padding-main-content) 0;
+      border-bottom: solid 0.13vw var(--color-border-darker);
 
       .product-id {
         flex: 1;
@@ -101,7 +114,7 @@ header {
       }
 
       .product-rates {
-        color: @COLOR_CONTENT_ACCENT;
+        color: var(--color-content-accent);
         flex: 1;
         font-size: 4.8vw;
         text-align: center;
@@ -113,7 +126,7 @@ header {
 
 footer {
   padding-top: 6.27vw;
-  color: @COLOR_TEXT_SECONDARY;
+  color: var(--color-text-secondary);
   font-size: 3.48vw;
   text-align: center;
 }
