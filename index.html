@@ -63,8 +63,26 @@
   </script>
 
   <script src="js/draggable.js"></script>
+  <script src="js/threading.js"></script>
   <script>
-    const d = new Draggable($(".product-list-wrap")[0]);
+    let loading;
+    const $productListWrap = $(".product-list-wrap");
+    $productListWrap.css({});
+
+    const d = new Draggable(
+      $productListWrap[0],
+      null,
+      [async () => {
+        loading = sleep(2000, "some more list items");
+        $productListWrap.css("transition", "top .3s");
+        const r = await loading;
+        console.log(`data is ${r}, now the list should snap back`);
+        $productListWrap
+          .css("top", 0)
+          .one("transitionend", () => $productListWrap.css("transition", ""));
+      }],
+      [Draggable.makeClampY(0, 100), Draggable.moveOnlyY],
+    );
   </script>
 </body>
 </html>

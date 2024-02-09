@@ -8,6 +8,26 @@ Draggable.pipeMultipleCallbacks = function (cb) {
   }
 };
 
+Draggable.__clamp = function (v, min, max) {
+  return Math.max(min, Math.min(max, v));
+};
+
+Draggable.makeClampY = function (min, max) {
+  return (_, newPos) => ({ x: newPos.x, y: Draggable.__clamp(newPos.y, min, max) });
+};
+
+Draggable.makeClampX = function (min, max) {
+  return (_, newPos) => ({ x: Draggable.__clamp(newPos.x, min, max), y: newPos.y });
+};
+
+Draggable.moveOnlyY = function (oldPos, newPos) {
+  return { x: oldPos.x, y: newPos.y };
+};
+
+Draggable.moveOnlyX = function (oldPos, newPos) {
+  return { x: newPos.x, y: oldPos.y };
+};
+
 function Draggable(elem, cbDragStart, cbDragEnd, cbDragMove) {
   this.elem = elem;
   if (getComputedStyle(this.elem).position !== "absolute") {
