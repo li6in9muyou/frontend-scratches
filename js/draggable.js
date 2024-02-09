@@ -58,6 +58,7 @@ Draggable.prototype.onDragStart = function (e) {
   this.dragKey = e.button;
   this.dragging = true;
   this.elem.dataset.dgDragging = this.dragging;
+  this.elemPos = { x: parseInt(this.elem.style.left) || 0, y: parseInt(this.elem.style.top) || 0 };
   this.lastMousePos.x = e.clientX;
   this.lastMousePos.y = e.clientY;
   this.cbDragStart && this.cbDragStart(e);
