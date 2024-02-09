@@ -1,7 +1,7 @@
 Draggable.pipeMultipleCallbacks = function (cb) {
   if (Array.isArray(cb)) {
-    return (oldPos, newPos) => cb.reduce(
-      (updatedNewPos, fn) => fn(oldPos, updatedNewPos) ?? updatedNewPos, newPos,
+    return (oldPos, newPos, ...args) => cb.reduce(
+      (updatedNewPos, fn) => fn(oldPos, updatedNewPos, ...args) ?? updatedNewPos, newPos,
     );
   } else {
     return cb;
@@ -10,17 +10,21 @@ Draggable.pipeMultipleCallbacks = function (cb) {
 
 function Draggable(elem, cbDragStart, cbDragEnd, cbDragMove) {
   this.elem = elem;
-  this.elem.style.position = "relative";
-  this.elem.parentElement.style.position = "relative";
+  if (getComputedStyle(this.elem).position !== "absolute") {
+    this.elem.style.position = "relative";
+  }
   this.cbDragStart = Draggable.pipeMultipleCallbacks(cbDragStart);
   this.cbDragEnd = Draggable.pipeMultipleCallbacks(cbDragEnd);
   this.cbDragMove = Draggable.pipeMultipleCallbacks(cbDragMove);
   this.dragging = false;
   this.lastMousePos = { x: 0, y: 0 };
+  this.elemPos = { x: 0, y: 0 };
   this.dragKey = NaN;
   elem.addEventListener("mousedown", this.onDragStart.bind(this));
-  document.addEventListener("mousedown", this.onDragMove.bind(this));
+  document.addEventListener("mousemove", this.onDragMove.bind(this));
   document.addEventListener("mouseup", this.onDragEnd.bind(this));
+  elem.addEventListener("drag", e => e.preventDefault());
+  elem.addEventListener("dragstart", e => e.preventDefault());
 }
 
 Draggable.prototype.onDragStart = function (e) {
@@ -50,20 +54,17 @@ Draggable.prototype.onDragMove = function (e) {
   };
   this.lastMousePos.x = e.clientX;
   this.lastMousePos.y = e.clientY;
-  const oldPos = {
-    x: this.elem.offsetLeft,
-    y: this.elem.offsetTop,
-  };
-  let newPos = { ...oldPos };
+  let newPos = { ...this.elemPos };
   newPos.x += posDiff.x;
   newPos.y += posDiff.y;
 
   if (this.cbDragMove) {
-    newPos = this.cbDragMove(oldPos, newPos, e) ?? newPos;
+    newPos = this.cbDragMove(this.elemPos, newPos, e) ?? newPos;
   }
 
   this.elem.style.top = newPos.y + "px";
   this.elem.style.left = newPos.x + "px";
+  this.elemPos = newPos;
 };
 
 Draggable.prototype.onDragEnd = function (e) {
