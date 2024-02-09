@@ -67,21 +67,49 @@
   <script>
     let loading;
     const $productListWrap = $(".product-list-wrap");
-    $productListWrap.css({});
+    const $pullDown = $(".pull-down--pocket");
+    const pullDownState = {
+      shouldLoadAfterRelease: false,
+      isLoading: false,
+    };
 
     const d = new Draggable(
       $productListWrap[0],
       null,
       [async () => {
+        if (!pullDownState.shouldLoadAfterRelease) {
+          $productListWrap
+            .css({
+              top: 0,
+              transition: "top .3s",
+            })
+            .one("transitionend", () => $productListWrap.css("transition", ""));
+          return;
+        }
         loading = sleep(2000, "some more list items");
-        $productListWrap.css("transition", "top .3s");
+        $productListWrap.css({ top: $pullDown.outerHeight(), transition: "top .3s" });
+        $pullDown.attr("data-loading", "true");
+        pullDownState.isLoading = true;
         const r = await loading;
         console.log(`data is ${r}, now the list should snap back`);
+        pullDownState.isLoading = false;
+        pullDownState.shouldLoadAfterRelease = false;
         $productListWrap
           .css("top", 0)
-          .one("transitionend", () => $productListWrap.css("transition", ""));
+          .one("transitionend", () => {
+            $pullDown.attr("data-loading", "false");
+            $productListWrap.css("transition", "");
+          });
       }],
-      [Draggable.makeClampY(0, 100), Draggable.moveOnlyY],
+      [
+        Draggable.makeClampY(0, 200),
+        Draggable.moveOnlyY,
+        pos => {
+          if (pos.y > 100) {
+            pullDownState.shouldLoadAfterRelease = true;
+          }
+        },
+      ],
     );
   </script>
 </body>
