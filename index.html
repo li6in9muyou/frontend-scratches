@@ -79,6 +79,67 @@
   <script src="js/draggable.js"></script>
   <script src="js/threading.js"></script>
   <script>
+    function useEventEmitter(possibleEvents) {
+      const listeners = new Map();
+
+      function addEventListener(type, cb) {
+        console.assert(possibleEvents.includes(type),
+          `StateMachine only emits: ${possibleEvents.join(", ")}, attempt to listen "${type}" event`);
+        if (listeners.has(type)) {
+          listeners.get(type).push(cb);
+        } else {
+          listeners.set(type, [cb]);
+        }
+      }
+
+      function emit(type, data) {
+        listeners.get(type)?.forEach(cb => requestIdleCallback(() => cb({ type, data }), { timeout: 30 }));
+      }
+
+      return [emit, addEventListener];
+    }
+
+    function cross(a, b, delimiter = ":") {
+      const ans = new Set();
+      for (const aa of a) {
+        for (const bb of b) {
+          ans.add(`${aa}${delimiter}${bb}`);
+        }
+      }
+      return Array.from(ans);
+    }
+
+    function useStateMachine(config) {
+      const state = {
+        currentState: config.initialState ?? config.states[0].name,
+      };
+      const adjacentList = new Map(config.states.map(s => ([s.name, s.transitions])));
+      const possibleEvents = cross(["enter", "leave"], config.states.map(s => s.name), ":").concat("*:*");
+      const [emit, addEventListener] = useEventEmitter(possibleEvents);
+
+      function send(event) {
+        const target = adjacentList.get(state.currentState).find(t => t.on === event)?.target;
+        if (target === undefined) {
+          console.error(`StateMachine: state ${state.currentState} does not accept event ${event}`);
+          return;
+        }
+
+        const prevState = state.currentState;
+        const data = {
+          leaving: prevState,
+          entering: target,
+          event,
+        };
+        state.currentState = target;
+        emit(`leave:${prevState}`, data);
+        emit(`enter:${target}`, data);
+        emit(`*:*`, data);
+      }
+
+      return [send, () => state.currentState, addEventListener];
+    }
+  </script>
+  <script>
     let loading;
     const $productListWrap = $(".product-list-wrap");
     const $productListItems = $(".product");
@@ -94,9 +155,76 @@
       isLoading: false,
     };
 
+    const bizLogic = new (function (scrollable) {
+      const S = {
+        armed: "armed",
+        idle: "idle",
+      };
+
+      const [send, queryState, listenToStateMachine] = useStateMachine({
+        initialState: "armed",
+        states: [
+          {
+            name: S.armed,
+            transitions: [
+              { on: "scrollDown", target: S.idle },
+            ],
+          },
+          {
+            name: S.idle,
+            transitions: [
+              { on: "scrollToTop", target: S.armed },
+            ],
+          },
+        ],
+      });
+
+      this.handlers = new Map([
+        [
+          "drag-start",
+          () => {
+            if (queryState() === S.idle) {
+              return Draggable.cancelToken;
+            }
+          },
+        ],
+        [
+          "scroll-events",
+          (e) => {
+            const scrollTop = e.target.scrollTop;
+            if (queryState() === S.armed) {
+              send("scrollDown");
+            }
+            if (scrollTop === 0) {
+              send("scrollToTop");
+            }
+          },
+        ],
+        [
+          "log-all-state-machine-events",
+          data => console.log("bizLogic: state machine event", data),
+        ],
+      ]);
+
+      this.getHandler = function (f) {
+        if (!this.handlers.has(f)) {
+          throw `bizLogic: can not handle ${f}`;
+        }
+        return this.handlers.get(f);
+      };
+
+      this.handle = function (f, ...args) {
+        return this.getHandler(f)(...args);
+      };
+
+      const $scrollable = $(scrollable);
+      $scrollable.on("scrollend", this.getHandler("scroll-events"));
+      listenToStateMachine("*:*", this.getHandler("log-all-state-machine-events"));
+    })($(".product-list"));
+
     const d = new Draggable(
       $productListWrap[0],
-      null,
+      bizLogic.getHandler("drag-start"),
       [async () => {
         if (!pullDownState.shouldLoadAfterRelease) {
           $productListWrap
