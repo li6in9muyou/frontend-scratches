@@ -1,3 +1,5 @@
+@padding-main-content: 4.67vw;
+
 :root[data-theme="light"] {
   --color-content-bg: #303030;
   --color-content-accent: #e52e52;
@@ -21,7 +23,7 @@
 }
 
 :root {
-  --padding-main-content: 4.67vw;
+  --padding-main-content: @padding-main-content;
 }
 
 i {
@@ -112,7 +114,7 @@ header {
   .product-list-title {
     display: flex;
     justify-content: space-between;
-    padding: 3.73vw var(--padding-main-content);
+    padding: 3.73vw @padding-main-content;
     border: solid 0.13vw var(--color-border);
     color: var(--color-text-secondary);
     background-color: var(--color-bg);
@@ -134,7 +136,7 @@ header {
     .product {
       display: flex;
       justify-content: space-between;
-      padding: var(--padding-main-content) 0;
+      padding: @padding-main-content 0;
       border-bottom: solid 0.13vw var(--color-border-darker);
 
       .product-id {
@@ -186,7 +188,7 @@ footer {
     margin: 0;
     color: var(--color-text);
     white-space: break-spaces;
-    padding: var(--padding-main-content);
+    padding: 0.5 * @padding-main-content;
     font-family: Consolas, monospace;
   }
 }
