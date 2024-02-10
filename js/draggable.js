@@ -1,3 +1,13 @@
+Draggable.cancelToken = 0xbaaaaaad;
+
+Draggable.chain = function (cb) {
+  if (Array.isArray(cb)) {
+    return (...args) => cb.reduce((_, fn) => fn(...args), undefined);
+  } else {
+    return cb;
+  }
+};
+
 Draggable.pipeMultipleCallbacks = function (cb) {
   if (Array.isArray(cb)) {
     return (oldPos, newPos, ...args) => cb.reduce(
@@ -33,8 +43,8 @@ function Draggable(elem, cbDragStart, cbDragEnd, cbDragMove) {
   if (getComputedStyle(this.elem).position !== "absolute") {
     this.elem.style.position = "relative";
   }
-  this.cbDragStart = Draggable.pipeMultipleCallbacks(cbDragStart);
-  this.cbDragEnd = Draggable.pipeMultipleCallbacks(cbDragEnd);
+  this.cbDragStart = Draggable.chain(cbDragStart);
+  this.cbDragEnd = Draggable.chain(cbDragEnd);
   this.cbDragMove = Draggable.pipeMultipleCallbacks(cbDragMove);
   this.dragging = false;
   this.lastMousePos = { x: 0, y: 0 };
@@ -51,6 +61,13 @@ Draggable.prototype.onDragStart = function (e) {
   if (!isNaN(this.dragKey) && e.button !== this.dragKey) {
     return;
   }
+
+  if (typeof this.cbDragStart === "function") {
+    if (this.cbDragStart() === Draggable.cancelToken) {
+      return;
+    }
+  }
+
   if (this.dragging) {
     return;
   }
