@@ -30,13 +30,6 @@
         </div>
         <div class="product-rates">0.32%</div>
       </div>
-      <div class="product">
-        <div class="product-id">
-          <i class="product-icon" data-icon="images/icon-1.png"></i>
-          <span class="product-name">微信支付</span>
-        </div>
-        <div class="product-rates">0.32%</div>
-      </div>
     </section>
   </main>
   <footer>
@@ -86,6 +79,13 @@
   <script>
     let loading;
     const $productListWrap = $(".product-list-wrap");
+    const $productListItems = $(".product");
+    for (let i = 0; i < 8; i++) {
+      const $c = $productListItems.eq(0).clone();
+      $c.find(".product-rates").text(`0.${i + 1}0%`);
+      $c.find(".product-name").text(`很好的产品 ${i + 1}`);
+      $productListItems.parent().append($c);
+    }
     const $pullDown = $(".pull-down--pocket");
     const pullDownState = {
       shouldLoadAfterRelease: false,
