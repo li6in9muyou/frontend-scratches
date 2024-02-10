@@ -7,6 +7,7 @@
   --color-bg: #fafafe;
   --color-text: #222;
   --color-text-secondary: #a0a0a0;
+  --color-text-bg-accent: crimson;
   --color-border: #eee;
   --color-border-darker: #e9e9e9;
 }
@@ -18,6 +19,7 @@
   --color-bg: #030303;
   --color-text: #fafafa;
   --color-text-secondary: #a0a0a0;
+  --color-text-bg-accent: crimson;
   --color-border: #1a1a1a;
   --color-border-darker: #e9e9e9;
 }
@@ -132,6 +134,8 @@ header {
     display: flex;
     flex-direction: column;
     padding: 0 4.27vw;
+    height: 240px;
+    overflow-y: auto;
 
     .product {
       display: flex;
@@ -178,17 +182,29 @@ footer {
     color: var(--color-text-secondary);
     font-size: 3.48vw;
     text-align: center;
+    border-bottom: dashed 4px var(--color-border);
+    padding: 1rem 0;
+    margin: 0;
   }
 
-  .notes:first-of-type {
-    border-top: dashed 4px var(--color-border);
+  pre.notes {
+    white-space: break-spaces;
+  }
+
+  p.notes {
+    text-indent: 2rem;
   }
 
   .notes {
     margin: 0;
     color: var(--color-text);
-    white-space: break-spaces;
     padding: 0.5 * @padding-main-content;
     font-family: Consolas, monospace;
+
+    strong {
+      background-color: var(--color-text-bg-accent);
+      padding: 4px;
+      font-weight: normal;
+    }
   }
 }
