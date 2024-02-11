@@ -143,6 +143,8 @@
     }
     const $pullDown = $(".pull-down--pocket");
     const $pullDownMsg = $(".pull-down--msg");
+    const CALLBACK_COMMIT_THRESHOLD = 2 * $pullDown.outerHeight();
+    const MAX_PULL_DOWN_DISTANCE = 3 * $pullDown.outerHeight();
 
     const bizLogic = new (function (scrollable, callback) {
       const S = {
@@ -229,7 +231,7 @@
         [
           "drag-move",
           pos => {
-            if (pos.y > 100 && isState(S.pocketRevealed)) {
+            if (pos.y > CALLBACK_COMMIT_THRESHOLD && isState(S.pocketRevealed)) {
               send(E.pullDownFarEnough);
             }
           },
@@ -332,7 +334,7 @@
       bizLogic.getHandler("drag-start"),
       bizLogic.getHandler("drag-end"),
       [
-        makeClampY(0, 200),
+        makeClampY(0, MAX_PULL_DOWN_DISTANCE),
         moveOnlyY,
         bizLogic.getHandler("drag-move"),
       ],
