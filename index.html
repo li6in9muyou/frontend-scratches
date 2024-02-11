@@ -128,7 +128,7 @@
     }
   </script>
   <script type="module">
-    import addDraggableEffect from "./js/draggable.js";
+    import addDraggableEffect, { draggableCancelToken } from "./js/draggable.js";
     import { makeClampY, moveOnlyY } from "./js/draggable.js";
 
     let loading;
@@ -204,7 +204,7 @@
           "drag-start",
           () => {
             if (isState(S.idle)) {
-              return Draggable.cancelToken;
+              return draggableCancelToken;
             }
             send(E.pullDown);
           },

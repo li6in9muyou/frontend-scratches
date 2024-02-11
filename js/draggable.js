@@ -1,4 +1,4 @@
-Draggable.cancelToken = 0xbaaaaaad;
+export const draggableCancelToken = 0xbaaaaaad;
 
 Draggable.chain = function (cb) {
   if (Array.isArray(cb)) {
@@ -63,7 +63,7 @@ Draggable.prototype.onDragStart = function (e) {
   }
 
   if (typeof this.cbDragStart === "function") {
-    if (this.cbDragStart() === Draggable.cancelToken) {
+    if (this.cbDragStart() === draggableCancelToken) {
       return;
     }
   }
