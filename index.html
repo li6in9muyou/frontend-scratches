@@ -108,7 +108,7 @@
       function send(event) {
         const target = adjacentList.get(state.currentState).find(t => t.on === event)?.target;
         if (target === undefined) {
-          console.warn(`StateMachine: state ${state.currentState} does not accept event ${event}`);
+          console.debug(`StateMachine: ignore event ${event} because state is ${state.currentState}`);
           return;
         }
 
@@ -125,7 +125,7 @@
         emit(`*:*`, data);
       }
 
-      return [send, () => state.currentState, addEventListener];
+      return [send, (s) => state.currentState === s, addEventListener];
     }
   </script>
   <script>
@@ -163,7 +163,7 @@
         okCallback: "okCallback",
       };
 
-      const [send, queryState, listenToStateMachine] = useStateMachine({
+      const [send, isState, listenToStateMachine] = useStateMachine({
         initialState: "armed",
         states: [
           {
@@ -205,7 +205,7 @@
         [
           "drag-start",
           () => {
-            if (queryState() === S.idle) {
+            if (isState(S.idle)) {
               return Draggable.cancelToken;
             }
             send(E.pullDown);
@@ -215,9 +215,7 @@
           "scroll-events",
           (e) => {
             const scrollTop = e.target.scrollTop;
-            if (queryState() === S.armed) {
-              send(E.scrollDown);
-            }
+            send(E.scrollDown);
             if (scrollTop === 0) {
               send(E.scrollToTop);
             } else {
@@ -232,7 +230,7 @@
         [
           "drag-move",
           pos => {
-            if (pos.y > 100 && queryState() === S.pocketRevealed) {
+            if (pos.y > 100 && isState(S.pocketRevealed)) {
               send(E.pullDownFarEnough);
             }
           },
