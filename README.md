@@ -14,13 +14,14 @@ stateDiagram-v2
     pocketRevealed --> callbackCommitted: pullDownFarEnough
     callbackCommitted --> callbackFired: cancelPull
     callbackFired --> armed: okCallback
-    callbackFired --> callbackFailed: failCallback
-    callbackFailed --> pocketRevealed: pullDown
     callbackFailed --> armed: pullUp
+    callbackFailed --> armed: scrollDown
+    callbackFired --> callbackFailed: failCallback
+    callbackFailed --> callbackCommitted: pullDownFarEnough
     note left of pocketRevealed: pocket reads "继续下拉加载更多数据"
     note right of callbackCommitted: pocket reads "松手加载更多数据"
-    note right of callbackFailed: pocket reads "加载失败，下拉重试"
-    note left of callbackFired: pocket reads "加载中，请稍候"
+    note right of callbackFailed: pocket reads "加载失败，下拉重试"\n pocket stays open
+    note left of callbackFired: pocket reads "加载中，请稍候"\n pocket stays open
 ```
 
 ### params for transition event listeners
