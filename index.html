@@ -13,9 +13,8 @@
     <i class="btn"><</i>
     <h1>产品签约</h1>
   </header>
-  <div class="pull-down--pocket" data-loading="false">
+  <div class="pull-down--pocket">
     <span class="pull-down--msg">松手加载更多数据</span>
-    <span class="pull-down--msg pull-down--msg__loading">正在加载中</span>
   </div>
   <main class="product-list-wrap">
     <section class="product-list-title">
@@ -92,14 +91,24 @@
       const state = {
         currentState: config.initialState ?? config.states[0].name,
       };
-      const adjacentList = new Map(config.states.map(s => ([s.name, s.transitions])));
+
+      const adjacentList = config.states.reduce((adj, s) => {
+        const { name, transitions } = s;
+        if (adj.has(name)) {
+          console.warn(`StateMachine: duplicate state name ${name}`);
+        }
+
+        adj.set(name, transitions);
+        return adj;
+      }, new Map());
+
       const possibleEvents = cross(["enter", "leave"], config.states.map(s => s.name), ":").concat("*:*");
       const [emit, addEventListener] = useEventEmitter(possibleEvents);
 
       function send(event) {
         const target = adjacentList.get(state.currentState).find(t => t.on === event)?.target;
         if (target === undefined) {
-          console.error(`StateMachine: state ${state.currentState} does not accept event ${event}`);
+          console.warn(`StateMachine: state ${state.currentState} does not accept event ${event}`);
           return;
         }
 
@@ -110,6 +119,7 @@
           event,
         };
         state.currentState = target;
+        console.debug(`StateMachine: ${prevState} --${event}--> ${target}`);
         emit(`leave:${prevState}`, data);
         emit(`enter:${target}`, data);
         emit(`*:*`, data);
@@ -129,15 +139,28 @@
       $productListItems.parent().append($c);
     }
     const $pullDown = $(".pull-down--pocket");
+    const $pullDownMsg = $(".pull-down--msg");
     const pullDownState = {
       shouldLoadAfterRelease: false,
       isLoading: false,
     };
 
-    const bizLogic = new (function (scrollable) {
+    const bizLogic = new (function (scrollable, callback) {
       const S = {
         armed: "armed",
         idle: "idle",
+        pocketRevealed: "pocketRevealed",
+        callbackCommitted: "callbackCommitted",
+        callbackFired: "callbackFired",
+      };
+
+      const E = {
+        scrollToTop: "scrollToTop",
+        scrollDown: "scrollDown",
+        pullDown: "pullDown",
+        cancelPull: "cancelPull",
+        pullDownFarEnough: "pullDownFarEnough",
+        okCallback: "okCallback",
       };
 
       const [send, queryState, listenToStateMachine] = useStateMachine({
@@ -146,13 +169,33 @@
           {
             name: S.armed,
             transitions: [
-              { on: "scrollDown", target: S.idle },
+              { on: E.scrollDown, target: S.idle },
+              { on: E.pullDown, target: S.pocketRevealed },
             ],
           },
           {
             name: S.idle,
             transitions: [
-              { on: "scrollToTop", target: S.armed },
+              { on: E.scrollToTop, target: S.armed },
+            ],
+          },
+          {
+            name: S.pocketRevealed,
+            transitions: [
+              { on: E.cancelPull, target: S.armed },
+              { on: E.pullDownFarEnough, target: S.callbackCommitted },
+            ],
+          },
+          {
+            name: S.callbackCommitted,
+            transitions: [
+              { on: E.cancelPull, target: S.callbackFired },
+            ],
+          },
+          {
+            name: S.callbackFired,
+            transitions: [
+              { on: E.okCallback, target: S.armed },
             ],
           },
         ],
@@ -165,6 +208,7 @@
             if (queryState() === S.idle) {
               return Draggable.cancelToken;
             }
+            send(E.pullDown);
           },
         ],
         [
@@ -172,18 +216,96 @@
           (e) => {
             const scrollTop = e.target.scrollTop;
             if (queryState() === S.armed) {
-              send("scrollDown");
+              send(E.scrollDown);
             }
             if (scrollTop === 0) {
-              send("scrollToTop");
+              send(E.scrollToTop);
+            } else {
+              send(E.pullDown);
             }
           },
         ],
         [
           "log-all-state-machine-events",
-          data => console.log("bizLogic: state machine event", data),
+          ({ data, type }) => console.log("bizLogic: state machine event", type, data),
+        ],
+        [
+          "drag-move",
+          pos => {
+            if (pos.y > 100 && queryState() === S.pocketRevealed) {
+              send(E.pullDownFarEnough);
+            }
+          },
+        ],
+        [
+          "drag-end",
+          () => send(E.cancelPull),
         ],
       ]);
+
+      listenToStateMachine(
+        `enter:${S.callbackFired}`,
+        () => {
+          $productListWrap.css({ top: $pullDown.outerHeight(), transition: "top .3s" });
+          $pullDown.attr("data-loading", "true");
+          console.log("pocket msg updated");
+        },
+      );
+      listenToStateMachine(
+        `enter:${S.callbackFired}`,
+        async () => {
+          console.log("callback is fired, waiting...");
+          const r = await callback();
+          console.log(`data is ${r}, now the list should snap back`);
+          send(E.okCallback);
+        },
+      );
+
+      function closePocket() {
+        const currentTop = parseInt($productListWrap.css("top"));
+        if (currentTop === 0) {
+          return;
+        }
+
+        $productListWrap
+          .css("top", 0)
+          .css("transition", "top .3s")
+          .one("transitionend", () => $productListWrap.css("transition", ""));
+      }
+
+      listenToStateMachine(
+        `enter:${S.armed}`,
+        ({ data }) => {
+          $pullDownMsg.text("继续下拉加载更多数据");
+          switch (data.event) {
+            case E.scrollToTop:
+              break;
+            case E.cancelPull:
+            case E.okCallback:
+              closePocket();
+              $pullDown.attr("data-loading", "false");
+              break;
+            default:
+              console.warn(`renderer for ${data.entering} receives unexpected event ${data.event}`, data);
+              break;
+          }
+        },
+      );
+      listenToStateMachine(
+        `enter:${S.pocketRevealed}`,
+        () => $pullDownMsg.text("继续下拉加载更多数据"),
+      );
+      listenToStateMachine(
+        `enter:${S.callbackCommitted}`,
+        () => $pullDownMsg.text("松手加载更多数据"),
+      );
+      listenToStateMachine(
+        `enter:${S.callbackFired}`,
+        () => {
+          $pullDownMsg.text("加载中，请稍候");
+          $pullDown.attr("icon", "loading");
+        },
+      );
 
       this.getHandler = function (f) {
         if (!this.handlers.has(f)) {
@@ -199,44 +321,16 @@
       const $scrollable = $(scrollable);
       $scrollable.on("scrollend", this.getHandler("scroll-events"));
       listenToStateMachine("*:*", this.getHandler("log-all-state-machine-events"));
-    })($(".product-list"));
+    })($(".product-list"), () => sleep(2000, "some more list items"));
 
     const d = new Draggable(
       $productListWrap[0],
       bizLogic.getHandler("drag-start"),
-      [async () => {
-        if (!pullDownState.shouldLoadAfterRelease) {
-          $productListWrap
-            .css({
-              top: 0,
-              transition: "top .3s",
-            })
-            .one("transitionend", () => $productListWrap.css("transition", ""));
-          return;
-        }
-        loading = sleep(2000, "some more list items");
-        $productListWrap.css({ top: $pullDown.outerHeight(), transition: "top .3s" });
-        $pullDown.attr("data-loading", "true");
-        pullDownState.isLoading = true;
-        const r = await loading;
-        console.log(`data is ${r}, now the list should snap back`);
-        pullDownState.isLoading = false;
-        pullDownState.shouldLoadAfterRelease = false;
-        $productListWrap
-          .css("top", 0)
-          .one("transitionend", () => {
-            $pullDown.attr("data-loading", "false");
-            $productListWrap.css("transition", "");
-          });
-      }],
+      bizLogic.getHandler("drag-end"),
       [
         Draggable.makeClampY(0, 200),
         Draggable.moveOnlyY,
-        pos => {
-          if (pos.y > 100) {
-            pullDownState.shouldLoadAfterRelease = true;
-          }
-        },
+        bizLogic.getHandler("drag-move"),
       ],
     );
   </script>

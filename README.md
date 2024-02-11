@@ -23,6 +23,21 @@ stateDiagram-v2
     note left of callbackFired: pocket reads "加载中，请稍候"
 ```
 
+### params for transition event listeners
+
+```typescript
+type Event<T> = {
+    type: string,
+    data: T
+}
+
+type TransitionEvent = Event<{
+    leaving: any,
+    entering: any,
+    event: any,
+}>
+```
+
 ## 警惕
 
 用 reduce 一定要指定初始值，否则如果数组只有一个元素的话，reducer
