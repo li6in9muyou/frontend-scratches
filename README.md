@@ -17,7 +17,7 @@ stateDiagram-v2
     callbackFailed --> armed: pullUp
     callbackFailed --> armed: scrollDown
     callbackFired --> callbackFailed: failCallback
-    callbackFailed --> callbackCommitted: pullDownFarEnough
+    callbackFailed --> pocketRevealed: pullDown
     note left of pocketRevealed: pocket reads "继续下拉加载更多数据"
     note right of callbackCommitted: pocket reads "松手加载更多数据"
     note right of callbackFailed: pocket reads "加载失败，下拉重试"\n pocket stays open

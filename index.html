@@ -153,6 +153,7 @@
         pocketRevealed: "pocketRevealed",
         callbackCommitted: "callbackCommitted",
         callbackFired: "callbackFired",
+        callbackFailed: "callbackFailed",
       };
 
       const E = {
@@ -162,6 +163,8 @@
         cancelPull: "cancelPull",
         pullDownFarEnough: "pullDownFarEnough",
         okCallback: "okCallback",
+        failCallback: "failCallback",
+        pullUp: "pullUp",
       };
 
       const [send, isState, listenToStateMachine] = useStateMachine({
@@ -197,6 +200,15 @@
             name: S.callbackFired,
             transitions: [
               { on: E.okCallback, target: S.armed },
+              { on: E.failCallback, target: S.callbackFailed },
+            ],
+          },
+          {
+            name: S.callbackFailed,
+            transitions: [
+              { on: E.pullDown, target: S.pocketRevealed },
+              { on: E.pullUp, target: S.armed },
+              { on: E.scrollDown, target: S.armed },
             ],
           },
         ],
@@ -254,9 +266,13 @@
         `enter:${S.callbackFired}`,
         async () => {
           console.log("callback is fired, waiting...");
-          const r = await callback();
-          console.log(`data is ${r}, now the list should snap back`);
-          send(E.okCallback);
+          try {
+            const r = await callback();
+            console.log(`data is ${r}, now the list should snap back`);
+            send(E.okCallback);
+          } catch (e) {
+            send(E.failCallback, e);
+          }
         },
       );
 
@@ -312,6 +328,13 @@
           $pullDown.attr("icon", "loading");
         },
       );
+      listenToStateMachine(
+        `enter:${S.callbackFailed}`,
+        () => {
+          $pullDownMsg.text("加载失败，下拉重试");
+          $pullDown.attr("icon", "");
+        },
+      );
 
       this.getHandler = function (f) {
         if (!this.handlers.has(f)) {
@@ -327,7 +350,7 @@
       const $scrollable = $(scrollable);
       $scrollable.on("scrollend", this.getHandler("scroll-events"));
       listenToStateMachine("*:*", this.getHandler("log-all-state-machine-events"));
-    })($(".product-list"), () => sleep(2000, "some more list items"));
+    })($(".product-list"), () => rejectAfter(2000, "error: something went wrong"));
 
     addDraggableEffect(
       $productListWrap[0],
