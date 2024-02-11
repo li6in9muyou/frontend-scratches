@@ -54,7 +54,6 @@
     }
   </script>
 
-  <script src="js/draggable.js"></script>
   <script src="js/threading.js"></script>
   <script>
     function useEventEmitter(possibleEvents) {
@@ -128,7 +127,10 @@
       return [send, (s) => state.currentState === s, addEventListener];
     }
   </script>
-  <script>
+  <script type="module">
+    import addDraggableEffect from "./js/draggable.js";
+    import { makeClampY, moveOnlyY } from "./js/draggable.js";
+
     let loading;
     const $productListWrap = $(".product-list-wrap");
     const $productListItems = $(".product");
@@ -140,10 +142,6 @@
     }
     const $pullDown = $(".pull-down--pocket");
     const $pullDownMsg = $(".pull-down--msg");
-    const pullDownState = {
-      shouldLoadAfterRelease: false,
-      isLoading: false,
-    };
 
     const bizLogic = new (function (scrollable, callback) {
       const S = {
@@ -321,13 +319,13 @@
       listenToStateMachine("*:*", this.getHandler("log-all-state-machine-events"));
     })($(".product-list"), () => sleep(2000, "some more list items"));
 
-    const d = new Draggable(
+    addDraggableEffect(
       $productListWrap[0],
       bizLogic.getHandler("drag-start"),
       bizLogic.getHandler("drag-end"),
       [
-        Draggable.makeClampY(0, 200),
-        Draggable.moveOnlyY,
+        makeClampY(0, 200),
+        moveOnlyY,
         bizLogic.getHandler("drag-move"),
       ],
     );
