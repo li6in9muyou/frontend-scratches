@@ -104,7 +104,7 @@
       const possibleEvents = cross(["enter", "leave"], config.states.map(s => s.name), ":").concat("*:*");
       const [emit, addEventListener] = useEventEmitter(possibleEvents);
 
-      function send(event) {
+      function send(event, ...more) {
         const target = adjacentList.get(state.currentState).find(t => t.on === event)?.target;
         if (target === undefined) {
           console.debug(`StateMachine: ignore event ${event} because state is ${state.currentState}`);
@@ -116,6 +116,7 @@
           leaving: prevState,
           entering: target,
           event,
+          more,
         };
         state.currentState = target;
         console.debug(`StateMachine: ${prevState} --${event}--> ${target}`);
@@ -242,7 +243,7 @@
       listenToStateMachine(
         `enter:${S.callbackFired}`,
         () => {
-          $productListWrap.css({ top: $pullDown.outerHeight(), transition: "top .3s" });
+          pocketFitContent();
           $pullDown.attr("data-loading", "true");
           console.log("pocket msg updated");
         },
@@ -257,16 +258,23 @@
         },
       );
 
-      function closePocket() {
+      function adjustPocket(targetHeight) {
         const currentTop = parseInt($productListWrap.css("top"));
-        if (currentTop === 0) {
+        if (currentTop === targetHeight) {
           return;
         }
 
         $productListWrap
-          .css("top", 0)
-          .css("transition", "top .3s")
+          .css({ top: targetHeight, transition: "top .3s" })
           .one("transitionend", () => $productListWrap.css("transition", ""));
+      }
+
+      function pocketFitContent() {
+        adjustPocket($pullDown.outerHeight());
+      }
+
+      function closePocket() {
+        adjustPocket(0);
       }
 
       listenToStateMachine(

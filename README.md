@@ -36,6 +36,7 @@ type TransitionEvent = Event<{
     leaving: any,
     entering: any,
     event: any,
+    more: undefined | any[]
 }>
 ```
 
