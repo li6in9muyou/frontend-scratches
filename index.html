@@ -263,7 +263,7 @@
         `enter:${S.callbackFired}`,
         () => {
           pocketFitContent();
-          $pullDown.attr("data-loading", "true");
+          $pullDownMsg.attr("icon", "loading");
           console.log("pocket msg updated");
         },
       );
@@ -322,7 +322,7 @@
             case E.cancelPull:
             case E.okCallback:
               closePocket();
-              $pullDown.attr("data-loading", "false");
+              $pullDownMsg.attr("icon", "");
               break;
             default:
               console.warn(`renderer for ${data.entering} receives unexpected event ${data.event}`, data);
@@ -342,14 +342,14 @@
         `enter:${S.callbackFired}`,
         () => {
           $pullDownMsg.text("加载中，请稍候");
-          $pullDown.attr("icon", "loading");
+          $pullDownMsg.attr("icon", "loading");
         },
       );
       listenToStateMachine(
         `enter:${S.callbackFailed}`,
         () => {
           $pullDownMsg.text("加载失败，下拉重试");
-          $pullDown.attr("icon", "");
+          $pullDownMsg.attr("icon", "");
         },
       );
 
