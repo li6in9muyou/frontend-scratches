@@ -208,7 +208,7 @@
             transitions: [
               { on: E.pullDown, target: S.pocketRevealed },
               { on: E.pullUp, target: S.armed },
-              { on: E.scrollDown, target: S.armed },
+              { on: E.scrollDown, target: S.idle },
             ],
           },
         ],
@@ -228,11 +228,10 @@
           "scroll-events",
           (e) => {
             const scrollTop = e.target.scrollTop;
-            send(E.scrollDown);
             if (scrollTop === 0) {
               send(E.scrollToTop);
             } else {
-              send(E.pullDown);
+              send(E.scrollDown);
             }
           },
         ],
