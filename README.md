@@ -44,3 +44,15 @@ type TransitionEvent = Event<{
 
 用 reduce 一定要指定初始值，否则如果数组只有一个元素的话，reducer
 根本不会执行。数组没有元素的话，reducer 不执行是符合预期的。
+
+## issues
+
+### clicking scrollable list after callback failed collapses pocket
+
+`pullDown` event is sent to state machine when user clicks. However, clicks do not necessarily mean user is actually
+pulling down. Current implementation sends `pullDown` event at `Draggable.onDragStart` which is fired on mouse down
+event.
+
+### clicking scrollable list at S.armed causes unnecessary state transition
+
+Cause is same as above issue.
