@@ -343,9 +343,10 @@
       );
       listenToStateMachine(
         `enter:${S.callbackFailed}`,
-        () => {
+        ({ data }) => {
           $pullDownMsg.text("加载失败，下拉重试");
           $pullDownMsg.attr("icon", "");
+          console.error("数据加载失败，原因：", data.more);
         },
       );
 
@@ -362,7 +363,20 @@
 
       const $scrollable = $(scrollable);
       $scrollable.on("scrollend", this.getHandler("scroll-events"));
-    })($(".product-list"), () => rejectAfter(2000, "error: something went wrong"));
+      listenToStateMachine("*:*", ({ data, type }) => console.log("bizLogic: state machine event", type, data));
+    })($(".product-list"), () => {
+      if (Math.random() < 0.4) {
+        return rejectAfter(2000, "error: something went wrong");
+      }
+      return resolveAfter(2000, [{ name: "新产品", rates: 0.2 + Math.random() * 4 }])
+        .then(products => products.forEach(p => {
+          const $c = $productListItems.eq(0).clone();
+          $c.find(".product-rates").text(`${p.rates.toFixed(2)}%`);
+          const $pl = $productListItems.parent();
+          $c.find(".product-name").text(`${p.name} ${$pl.children().length}`);
+          $pl.prepend($c);
+        }));
+    });
 
     addDraggableEffect(
       $productListWrap[0],
