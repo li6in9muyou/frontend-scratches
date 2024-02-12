@@ -235,10 +235,6 @@
           },
         ],
         [
-          "log-all-state-machine-events",
-          ({ data, type }) => console.log("bizLogic: state machine event", type, data),
-        ],
-        [
           "drag-move",
           pos => {
             if (pos.y > CALLBACK_COMMIT_THRESHOLD && isState(S.pocketRevealed)) {
@@ -366,7 +362,6 @@
 
       const $scrollable = $(scrollable);
       $scrollable.on("scrollend", this.getHandler("scroll-events"));
-      listenToStateMachine("*:*", this.getHandler("log-all-state-machine-events"));
     })($(".product-list"), () => rejectAfter(2000, "error: something went wrong"));
 
     addDraggableEffect(
