@@ -4,390 +4,46 @@
   <meta charset="UTF-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>Scratch</title>
-  <link rel="stylesheet/less" type="text/css" href="less/styles.less"/>
-  <script src="https://cdn.staticfile.net/less.js/4.2.0/less.js"></script>
+  <style>
+    body {
+      background-color: black;
+    }
+
+    #canvas {
+      width: 400px;
+      height: 400px;
+      border: solid 4px mediumvioletred;
+    }
+  </style>
 </head>
 
 <body>
-  <header>
-    <i class="btn"><</i>
-    <h1>产品签约</h1>
-  </header>
-  <div class="pull-down--pocket">
-    <span class="pull-down--msg">松手加载更多数据</span>
-  </div>
-  <main class="product-list-wrap">
-    <section class="product-list-title">
-      <h2>产品名称</h2>
-      <h2>产品费率</h2>
-    </section>
-    <section class="product-list">
-      <div class="product">
-        <div class="product-id">
-          <i class="product-icon" data-icon="images/icon-1.png"></i>
-          <span class="product-name">微信支付</span>
-        </div>
-        <div class="product-rates">0.32%</div>
-      </div>
-    </section>
-  </main>
-  <footer>
-    <p class="tip">线上产品费率不同，详情请咨询：400-0000-0000</p>
-  </footer>
-
-  <script src="js/jquery.js"></script>
-  <script>
-    $("[data-icon]").each(function () {
-      const i = $(this);
-      i.css({
-        "background-image": `url(${i.attr("data-icon")})`,
-      });
-    });
-  </script>
+  <canvas id="canvas"></canvas>
 
   <script>
-    const isPreferDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    if (isPreferDark) {
-      $(":root").attr("data-theme", "dark");
-    } else {
-      $(":root").attr("data-theme", "light");
-    }
-  </script>
+    const canvas = document.getElementById("canvas");
+    canvas.setAttribute("width", "400px");
+    canvas.setAttribute("height", "400px");
+    const ctx = canvas.getContext("2d");
 
-  <script src="js/threading.js"></script>
-  <script>
-    function useEventEmitter(possibleEvents) {
-      const listeners = new Map();
+    let iteration = 0;
 
-      function addEventListener(type, cb) {
-        console.assert(possibleEvents.includes(type),
-          `StateMachine only emits: ${possibleEvents.join(", ")}, attempt to listen "${type}" event`);
-        if (listeners.has(type)) {
-          listeners.get(type).push(cb);
-        } else {
-          listeners.set(type, [cb]);
-        }
+
+    function draw() {
+      requestAnimationFrame(draw);
+      iteration++;
+
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, 400, 400);
+      ctx.fillStyle = "rgb(128,128,128)";
+      ctx.fillRect(200, 0, 200, 200);
+      if (iteration % 2 === 0) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, 200, 200);
       }
-
-      function emit(type, data) {
-        listeners.get(type)?.forEach(cb => requestIdleCallback(() => cb({ type, data }), { timeout: 30 }));
-      }
-
-      return [emit, addEventListener];
     }
 
-    function cross(a, b, delimiter = ":") {
-      const ans = new Set();
-      for (const aa of a) {
-        for (const bb of b) {
-          ans.add(`${aa}${delimiter}${bb}`);
-        }
-      }
-      return Array.from(ans);
-    }
-
-    function useStateMachine(config) {
-      const state = {
-        currentState: config.initialState ?? config.states[0].name,
-      };
-
-      const adjacentList = config.states.reduce((adj, s) => {
-        const { name, transitions } = s;
-        if (adj.has(name)) {
-          console.warn(`StateMachine: duplicate state name ${name}`);
-        }
-
-        adj.set(name, transitions);
-        return adj;
-      }, new Map());
-
-      const possibleEvents = cross(["enter", "leave"], config.states.map(s => s.name), ":").concat("*:*");
-      const [emit, addEventListener] = useEventEmitter(possibleEvents);
-
-      function send(event, ...more) {
-        const target = adjacentList.get(state.currentState).find(t => t.on === event)?.target;
-        if (target === undefined) {
-          console.debug(`StateMachine: ignore event ${event} because state is ${state.currentState}`);
-          return;
-        }
-
-        const prevState = state.currentState;
-        const data = {
-          leaving: prevState,
-          entering: target,
-          event,
-          more,
-        };
-        state.currentState = target;
-        console.debug(`StateMachine: ${prevState} --${event}--> ${target}`);
-        emit(`leave:${prevState}`, data);
-        emit(`enter:${target}`, data);
-        emit(`*:*`, data);
-      }
-
-      return [send, (s) => state.currentState === s, addEventListener];
-    }
-  </script>
-  <script type="module">
-    import addDraggableEffect, { draggableCancelToken } from "./js/draggable.js";
-    import { makeClampY, moveOnlyY } from "./js/draggable.js";
-
-    let loading;
-    const $productListWrap = $(".product-list-wrap");
-    const $productListItems = $(".product");
-    for (let i = 0; i < 19; i++) {
-      const $c = $productListItems.eq(0).clone();
-      $c.find(".product-rates").text(`0.${i + 1}0%`);
-      $c.find(".product-name").text(`很好的产品 ${i + 1}`);
-      $productListItems.parent().append($c);
-    }
-    const $pullDown = $(".pull-down--pocket");
-    const $pullDownMsg = $(".pull-down--msg");
-    const CALLBACK_COMMIT_THRESHOLD = 2 * $pullDown.outerHeight();
-    const MAX_PULL_DOWN_DISTANCE = 3 * $pullDown.outerHeight();
-
-    const bizLogic = new (function (scrollable, callback) {
-      const S = {
-        armed: "armed",
-        idle: "idle",
-        pocketRevealed: "pocketRevealed",
-        callbackCommitted: "callbackCommitted",
-        callbackFired: "callbackFired",
-        callbackFailed: "callbackFailed",
-      };
-
-      const E = {
-        scrollToTop: "scrollToTop",
-        scrollDown: "scrollDown",
-        pullDown: "pullDown",
-        cancelPull: "cancelPull",
-        pullDownFarEnough: "pullDownFarEnough",
-        okCallback: "okCallback",
-        failCallback: "failCallback",
-        pullUp: "pullUp",
-      };
-
-      const [send, isState, listenToStateMachine] = useStateMachine({
-        initialState: "armed",
-        states: [
-          {
-            name: S.armed,
-            transitions: [
-              { on: E.scrollDown, target: S.idle },
-              { on: E.pullDown, target: S.pocketRevealed },
-            ],
-          },
-          {
-            name: S.idle,
-            transitions: [
-              { on: E.scrollToTop, target: S.armed },
-            ],
-          },
-          {
-            name: S.pocketRevealed,
-            transitions: [
-              { on: E.cancelPull, target: S.armed },
-              { on: E.pullDownFarEnough, target: S.callbackCommitted },
-            ],
-          },
-          {
-            name: S.callbackCommitted,
-            transitions: [
-              { on: E.cancelPull, target: S.callbackFired },
-            ],
-          },
-          {
-            name: S.callbackFired,
-            transitions: [
-              { on: E.okCallback, target: S.armed },
-              { on: E.failCallback, target: S.callbackFailed },
-            ],
-          },
-          {
-            name: S.callbackFailed,
-            transitions: [
-              { on: E.pullDown, target: S.pocketRevealed },
-              { on: E.pullUp, target: S.armed },
-              { on: E.scrollDown, target: S.idle },
-            ],
-          },
-        ],
-      });
-
-      this.handlers = new Map([
-        [
-          "drag-start",
-          () => {
-            if (isState(S.idle)) {
-              return draggableCancelToken;
-            }
-          },
-        ],
-        [
-          "scroll-events",
-          (e) => {
-            const scrollTop = e.target.scrollTop;
-            if (scrollTop === 0) {
-              send(E.scrollToTop);
-            } else {
-              send(E.scrollDown);
-            }
-          },
-        ],
-        [
-          "drag-move",
-          pos => {
-            if (pos.y > CALLBACK_COMMIT_THRESHOLD && isState(S.pocketRevealed)) {
-              send(E.pullDownFarEnough);
-            }
-            if (isState(S.armed) || isState(S.callbackFailed)) {
-              send(E.pullDown);
-            }
-          },
-        ],
-        [
-          "drag-end",
-          () => {
-            if (isState(S.pocketRevealed) || isState(S.callbackCommitted)) {
-              send(E.cancelPull);
-            }
-          },
-        ],
-      ]);
-
-      listenToStateMachine(
-        `enter:${S.callbackFired}`,
-        () => {
-          pocketFitContent();
-          $pullDownMsg.attr("icon", "loading");
-          console.log("pocket msg updated");
-        },
-      );
-      listenToStateMachine(
-        `enter:${S.callbackFired}`,
-        async () => {
-          console.log("callback is fired, waiting...");
-          try {
-            const r = await callback();
-            console.log(`data is ${r}, now the list should snap back`);
-            send(E.okCallback);
-          } catch (e) {
-            send(E.failCallback, e);
-          }
-        },
-      );
-
-      function adjustPocket(targetHeight) {
-        const currentTop = parseInt($productListWrap.css("top"));
-        if (currentTop === targetHeight) {
-          return;
-        }
-
-        $productListWrap
-          .css({ top: targetHeight, transition: "top .3s" })
-          .one("transitionend", () => $productListWrap.css("transition", ""));
-      }
-
-      function pocketFitContent() {
-        adjustPocket($pullDown.outerHeight());
-      }
-
-      function closePocket() {
-        adjustPocket(0);
-      }
-
-      listenToStateMachine(
-        `enter:${S.idle}`,
-        ({ data }) => {
-          switch (data.leaving) {
-            case S.callbackFailed:
-              $pullDownMsg.text("欢迎下次光临");
-              closePocket();
-              break;
-            default:
-              console.warn(`renderer for ${data.entering} receives unexpected event ${data.event}`, data);
-              break;
-          }
-        },
-      );
-      listenToStateMachine(
-        `enter:${S.armed}`,
-        ({ data }) => {
-          $pullDownMsg.text("继续下拉加载更多数据");
-          switch (data.event) {
-            case E.cancelPull:
-            case E.okCallback:
-              closePocket();
-              $pullDownMsg.attr("icon", "");
-              break;
-            default:
-              console.warn(`renderer for ${data.entering} receives unexpected event ${data.event}`, data);
-              break;
-          }
-        },
-      );
-      listenToStateMachine(
-        `enter:${S.pocketRevealed}`,
-        () => $pullDownMsg.text("继续下拉加载更多数据"),
-      );
-      listenToStateMachine(
-        `enter:${S.callbackCommitted}`,
-        () => $pullDownMsg.text("松手加载更多数据"),
-      );
-      listenToStateMachine(
-        `enter:${S.callbackFired}`,
-        () => {
-          $pullDownMsg.text("加载中，请稍候");
-          $pullDownMsg.attr("icon", "loading");
-        },
-      );
-      listenToStateMachine(
-        `enter:${S.callbackFailed}`,
-        ({ data }) => {
-          $pullDownMsg.text("加载失败，下拉重试");
-          $pullDownMsg.attr("icon", "");
-          console.error("数据加载失败，原因：", data.more);
-        },
-      );
-
-      this.getHandler = function (f) {
-        if (!this.handlers.has(f)) {
-          throw `bizLogic: can not handle ${f}`;
-        }
-        return this.handlers.get(f);
-      };
-
-      this.handle = function (f, ...args) {
-        return this.getHandler(f)(...args);
-      };
-
-      const $scrollable = $(scrollable);
-      $scrollable.on("scrollend", this.getHandler("scroll-events"));
-      listenToStateMachine("*:*", ({ data, type }) => console.log("bizLogic: state machine event", type, data));
-    })($(".product-list"), () => {
-      if (Math.random() < 0.4) {
-        return rejectAfter(2000, "error: something went wrong");
-      }
-      return resolveAfter(2000, [{ name: "新产品", rates: 0.2 + Math.random() * 4 }])
-        .then(products => products.forEach(p => {
-          const $c = $productListItems.eq(0).clone();
-          $c.find(".product-rates").text(`${p.rates.toFixed(2)}%`);
-          const $pl = $productListItems.parent();
-          $c.find(".product-name").text(`${p.name} ${$pl.children().length}`);
-          $pl.prepend($c);
-        }));
-    });
-
-    addDraggableEffect(
-      $productListWrap[0],
-      bizLogic.getHandler("drag-start"),
-      bizLogic.getHandler("drag-end"),
-      [
-        makeClampY(0, MAX_PULL_DOWN_DISTANCE),
-        moveOnlyY,
-        bizLogic.getHandler("drag-move"),
-      ],
-    );
+    requestAnimationFrame(draw);
   </script>
 </body>
 </html>
