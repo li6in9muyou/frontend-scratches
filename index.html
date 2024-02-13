@@ -32,17 +32,19 @@
     function draw() {
       requestAnimationFrame(draw);
       iteration++;
-
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, 400, 400);
-      ctx.fillStyle = "rgb(128,128,128)";
-      ctx.fillRect(200, 0, 200, 200);
       if (iteration % 2 === 0) {
         ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, 200, 200);
+      } else {
+        ctx.fillStyle = "black";
         ctx.fillRect(0, 0, 200, 200);
       }
     }
 
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, 400, 400);
+    ctx.fillStyle = "rgb(128,128,128)";
+    ctx.fillRect(200, 0, 200, 200);
     requestAnimationFrame(draw);
   </script>
 </body>
