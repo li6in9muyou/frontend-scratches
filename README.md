@@ -1,5 +1,7 @@
 # pull-to-refresh behaviour
 
+> 本项目已经移动到另一个仓库
+
 # 下拉刷新效果
 
 ## 状态机
