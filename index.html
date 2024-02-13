@@ -8,44 +8,86 @@
     body {
       background-color: black;
     }
-
-    #canvas {
-      width: 400px;
-      height: 400px;
-      border: solid 4px mediumvioletred;
-    }
   </style>
 </head>
 
 <body>
-  <canvas id="canvas"></canvas>
-
+  <script src="js/jquery.js"></script>
   <script>
-    const canvas = document.getElementById("canvas");
-    canvas.setAttribute("width", "400px");
-    canvas.setAttribute("height", "400px");
-    const ctx = canvas.getContext("2d");
+    const audios = [
+      {
+        id: "Heater-1",
+        url: "audio/Heater-1.mp3",
+      },
+      {
+        id: "Heater-2",
+        url: "audio/Heater-2.mp3",
+      },
+      {
+        id: "Heater-3",
+        url: "audio/Heater-3.mp3",
+      },
+      {
+        id: "Heater-4",
+        url: "audio/Heater-4_1.mp3",
+      },
+      {
+        id: "Clap",
+        url: "audio/Heater-6.mp3",
+      },
+      {
+        id: "Open-HH",
+        url: "audio/Dsc_Oh.mp3",
+      },
+      {
+        id: "Kick-n'-Hat",
+        url: "audio/Kick_n_Hat.mp3",
+      },
+      {
+        id: "Kick",
+        url: "audio/RP4_KICK_1.mp3",
+      },
+      {
+        id: "Closed-HH",
+        url: "audio/Cev_H2.mp3",
+      },
+    ];
 
-    let iteration = 0;
+    audios.forEach(({ id, url }) => {
+      $(document.body).append(
+        $(`<audio src=${url} id=${id} />`),
+      );
+    });
+  </script>
+  <script>
+    const TASK_INTERVAL_MS = 1000 * 60 / 80 / 8;
+    const DRUM_SEQ = [
+      ["Kick", "Open-HH"],
+      [],
+      ["Heater-1", "Open-HH"],
+      [],
+      ["Open-HH"],
+      ["Kick"],
+      ["Heater-1", "Open-HH"],
+      [],
+    ];
 
+    let i = 0;
 
-    function draw() {
-      requestAnimationFrame(draw);
-      iteration++;
-      if (iteration % 2 === 0) {
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, 200, 200);
-      } else {
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, 200, 200);
+    function music() {
+      const hit = DRUM_SEQ[i];
+      hit.forEach(h => {
+        const m = $(`audio[id="${h}"]`)[0];
+        m.play();
+      });
+
+      i++;
+      if (i === 8) {
+        i = 0;
       }
     }
 
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, 400, 400);
-    ctx.fillStyle = "rgb(128,128,128)";
-    ctx.fillRect(200, 0, 200, 200);
-    requestAnimationFrame(draw);
+    $(document).on("click", () => setInterval(music, TASK_INTERVAL_MS));
   </script>
 </body>
 </html>
