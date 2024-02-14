@@ -8,86 +8,102 @@
     body {
       background-color: black;
     }
+
+    main {
+      height: 500px;
+      padding: 12px;
+      overflow-y: auto;
+      border: solid 2px crimson;
+      touch-action: pan-x pinch-zoom;
+    }
+
+    .item {
+      height: 120px;
+    }
   </style>
 </head>
 
 <body>
+  <main>
+  </main>
   <script src="js/jquery.js"></script>
   <script>
-    const audios = [
-      {
-        id: "Heater-1",
-        url: "audio/Heater-1.mp3",
-      },
-      {
-        id: "Heater-2",
-        url: "audio/Heater-2.mp3",
-      },
-      {
-        id: "Heater-3",
-        url: "audio/Heater-3.mp3",
-      },
-      {
-        id: "Heater-4",
-        url: "audio/Heater-4_1.mp3",
-      },
-      {
-        id: "Clap",
-        url: "audio/Heater-6.mp3",
-      },
-      {
-        id: "Open-HH",
-        url: "audio/Dsc_Oh.mp3",
-      },
-      {
-        id: "Kick-n'-Hat",
-        url: "audio/Kick_n_Hat.mp3",
-      },
-      {
-        id: "Kick",
-        url: "audio/RP4_KICK_1.mp3",
-      },
-      {
-        id: "Closed-HH",
-        url: "audio/Cev_H2.mp3",
-      },
-    ];
-
-    audios.forEach(({ id, url }) => {
-      $(document.body).append(
-        $(`<audio src=${url} id=${id} />`),
-      );
-    });
+    function getRandomColor() {
+      return "#" + Math.floor(0xffffff * Math.random()).toString(16).padStart(6, "0");
+    }
   </script>
   <script>
-    const TASK_INTERVAL_MS = 1000 * 60 / 80 / 8;
-    const DRUM_SEQ = [
-      ["Kick", "Open-HH"],
-      [],
-      ["Heater-1", "Open-HH"],
-      [],
-      ["Open-HH"],
-      ["Kick"],
-      ["Heater-1", "Open-HH"],
-      [],
-    ];
+    const $main = $("main");
 
-    let i = 0;
-
-    function music() {
-      const hit = DRUM_SEQ[i];
-      hit.forEach(h => {
-        const m = $(`audio[id="${h}"]`)[0];
-        m.play();
-      });
-
-      i++;
-      if (i === 8) {
-        i = 0;
-      }
+    for (let i = 0; i < 10; i++) {
+      const $i = $("<section class='item'>");
+      $i.css("backgroundColor", getRandomColor());
+      $main.append($i);
     }
+    const touchHandler = new (function () {
+      this.moveCount = 0;
+      this.__handleMove = function (e) {
+        this.moveCount++;
+        if (100 < this.moveCount && this.moveCount < 200 + 1) {
+          // e.preventDefault();
+        }
+      };
+      this.__handleStart = function () {
+        this.moveCount = 0;
+      };
 
-    $(document).on("click", () => setInterval(music, TASK_INTERVAL_MS));
+      this.handler = (function (e) {
+        console.log(`touchHandler ${e.type} e.cancelable=${e.cancelable}`);
+        switch (e.type) {
+          case "touchstart":
+            return this.__handleStart(e);
+          case "touchmove":
+            return this.__handleMove(e);
+          default:
+            console.warn("touchHandler receives unexpected event", e.type, e);
+            break;
+        }
+      }).bind(this);
+    })();
+    $main.on("touchstart touchmove touchend touchcancel", touchHandler.handler);
+    $main.on("mousedown mousemove mouseup", (e) => console.log(`$main:mouse ${e.type}`));
+
+    const pointerEventHandler = new (function () {
+      this.moveCount = 0;
+      this.__handleDown = function () {
+        this.moveCount = 0;
+      };
+      this.__handleMove = function (e) {
+        this.moveCount++;
+        console.log(`pointerEventHandler e.cancelable=${e.cancelable} this.moveCount=${this.moveCount}`);
+        // e.preventDefault();
+      };
+      this.__handleCancel = function (e) {
+        console.log(`pointerEventHandler e.cancelable=${e.cancelable} this.moveCount=${this.moveCount}`);
+        // e.preventDefault();
+      };
+      this.__handleUp = function () {
+      };
+
+      this.handler = (function (e) {
+        console.log(`pointerEventHandler ${e.type}`);
+        switch (e.type) {
+          case "pointerdown":
+            return this.__handleDown(e);
+          case "pointermove":
+            return this.__handleMove(e);
+          case "pointerup":
+            return this.__handleUp(e);
+          case "pointercancel":
+            return this.__handleCancel(e);
+          default:
+            console.warn("pointerEventHandler receives unexpected event", e.type, e);
+            break;
+        }
+      }).bind(this);
+    })();
+
+    $main.on("pointerdown pointermove pointerup pointercancel", pointerEventHandler.handler);
   </script>
 </body>
 </html>
