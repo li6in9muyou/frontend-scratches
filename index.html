@@ -114,15 +114,15 @@
       this.addManyItems = (keys, keyModifier, effectiveKey, listModifier) => {
         const wg = new WaitGroup();
         for (const key of keys) {
-          keyModifier();
+          const thisKey = keyModifier();
           wg.add();
           const $item = createLoadingPlaceholder(() =>
-            this.getItem(this[effectiveKey]).then((i) => {
+            this.getItem(thisKey).then(($item) => {
               wg.done();
-              return i;
+              $item.attr("data-ifs-key", thisKey);
+              return $item;
             }),
           );
-          $item.attr("data-ifs-key", this[effectiveKey]);
           listModifier($item);
         }
         return wg.wait();
