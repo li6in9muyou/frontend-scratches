@@ -1,109 +1,85 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Scratch</title>
-  <style>
-    body {
-      background-color: black;
-    }
+<html lang="zh" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <title>无穷滚动</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        background-color: black;
+        color: white;
+      }
 
-    main {
-      height: 500px;
-      padding: 12px;
-      overflow-y: auto;
-      border: solid 2px crimson;
-      touch-action: pan-x pinch-zoom;
-    }
+      .content {
+        height: 269px;
+        margin: 6px;
+        text-align: center;
+        background-color: mediumvioletred;
+        border: solid 2px white;
+        font-size: 90px;
+      }
 
-    .item {
-      height: 120px;
-    }
-  </style>
-</head>
-
-<body>
-  <main>
-  </main>
+      .loading {
+        background-color: dimgray;
+      }
+    </style>
+  </head>
+  <body>
+    <main></main>
+  </body>
   <script src="js/jquery.js"></script>
-  <script>
-    function getRandomColor() {
-      return "#" + Math.floor(0xffffff * Math.random()).toString(16).padStart(6, "0");
-    }
+  <script type="module">
+    const infiniteScrollEffect = new (function (viewportH, getItem, list) {
+      this.renderedH = 0;
+      this.vpH = viewportH;
+      this.list = list;
+      this.keyFront = 0;
+      this.keyBack = 0;
+
+      while (this.renderedH < 1.5 * this.vpH) {
+        const item = getItem(this.keyBack);
+        $(item).attr("data-inf-scr-key", this.keyBack);
+        this.keyBack += 1;
+        this.list.append(item);
+        this.renderedH += item.outerHeight();
+      }
+
+      this.list.append($("<div class='content loading'>loading</div>"));
+
+      document.addEventListener(
+        "scroll",
+        () => {
+          console.log(
+            "whether to append to list",
+            this.renderedH,
+            document.documentElement.scrollTop,
+          );
+          if (
+            this.renderedH - document.documentElement.scrollTop <
+            1.5 * this.vpH
+          ) {
+            const item = getItem(this.keyBack);
+            $(item).attr("data-inf-scr-key", this.keyBack);
+            this.keyBack += 1;
+            this.list.append(item);
+            this.renderedH += item.outerHeight();
+          }
+
+          const minKeyFront = this.keyBack - 7;
+          if (minKeyFront >= 0) {
+            for (let toDelete = 0; toDelete < minKeyFront; toDelete++) {
+              this.list.children(`[data-inf-scr-key=${toDelete}]`).remove();
+              this.keyFront += 1;
+            }
+          }
+        },
+        { passive: true },
+      );
+    })(800, (key) => $(`<div class="content">${key}</div>`), $("main"));
+
+    $(document).on("scroll wheel", (e) => {
+      console.log("document event", e.type, e);
+    });
   </script>
-  <script>
-    const $main = $("main");
-
-    for (let i = 0; i < 10; i++) {
-      const $i = $("<section class='item'>");
-      $i.css("backgroundColor", getRandomColor());
-      $main.append($i);
-    }
-    const touchHandler = new (function () {
-      this.moveCount = 0;
-      this.__handleMove = function (e) {
-        this.moveCount++;
-        if (100 < this.moveCount && this.moveCount < 200 + 1) {
-          // e.preventDefault();
-        }
-      };
-      this.__handleStart = function () {
-        this.moveCount = 0;
-      };
-
-      this.handler = (function (e) {
-        console.log(`touchHandler ${e.type} e.cancelable=${e.cancelable}`);
-        switch (e.type) {
-          case "touchstart":
-            return this.__handleStart(e);
-          case "touchmove":
-            return this.__handleMove(e);
-          default:
-            console.warn("touchHandler receives unexpected event", e.type, e);
-            break;
-        }
-      }).bind(this);
-    })();
-    $main.on("touchstart touchmove touchend touchcancel", touchHandler.handler);
-    $main.on("mousedown mousemove mouseup", (e) => console.log(`$main:mouse ${e.type}`));
-
-    const pointerEventHandler = new (function () {
-      this.moveCount = 0;
-      this.__handleDown = function () {
-        this.moveCount = 0;
-      };
-      this.__handleMove = function (e) {
-        this.moveCount++;
-        console.log(`pointerEventHandler e.cancelable=${e.cancelable} this.moveCount=${this.moveCount}`);
-        // e.preventDefault();
-      };
-      this.__handleCancel = function (e) {
-        console.log(`pointerEventHandler e.cancelable=${e.cancelable} this.moveCount=${this.moveCount}`);
-        // e.preventDefault();
-      };
-      this.__handleUp = function () {
-      };
-
-      this.handler = (function (e) {
-        console.log(`pointerEventHandler ${e.type}`);
-        switch (e.type) {
-          case "pointerdown":
-            return this.__handleDown(e);
-          case "pointermove":
-            return this.__handleMove(e);
-          case "pointerup":
-            return this.__handleUp(e);
-          case "pointercancel":
-            return this.__handleCancel(e);
-          default:
-            console.warn("pointerEventHandler receives unexpected event", e.type, e);
-            break;
-        }
-      }).bind(this);
-    })();
-
-    $main.on("pointerdown pointermove pointerup pointercancel", pointerEventHandler.handler);
-  </script>
-</body>
 </html>
