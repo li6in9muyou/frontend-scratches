@@ -19,9 +19,16 @@
         border: solid 2px white;
         font-size: 90px;
       }
+    </style>
 
-      .loading {
+    <style>
+      .vs--item__loading {
+        height: 269px;
+        margin: 6px;
+        text-align: center;
         background-color: dimgray;
+        border: solid 2px white;
+        font-size: 90px;
       }
     </style>
   </head>
@@ -29,54 +36,139 @@
     <main></main>
   </body>
   <script src="js/jquery.js"></script>
+  <script>
+    function resolveAfter(milliseconds, result) {
+      return new Promise((resolve) =>
+        setTimeout(() => resolve(result), milliseconds),
+      );
+    }
+
+    class WaitGroup {
+      constructor(init = 0) {
+        this.current = init;
+        this.allDone = null;
+        this.block = new Promise((resolve) => (this.allDone = resolve));
+      }
+      done() {
+        this.current -= 1;
+        if (this.current <= 0) {
+          this.allDone();
+        }
+      }
+      add(cnt = 1) {
+        this.current += cnt;
+      }
+      wait() {
+        return this.block;
+      }
+    }
+
+    function* genNumbers(start, cnt, step = 1) {
+      for (let i = 0; i < cnt; i++) {
+        yield start + step * i;
+      }
+    }
+  </script>
   <script type="module">
+    const $list = $("main");
+
     const infiniteScrollEffect = new (function (viewportH, getItem, list) {
       this.renderedH = 0;
       this.vpH = viewportH;
       this.list = list;
+      this.getItem = getItem;
       this.keyFront = 0;
       this.keyBack = 0;
+      this.isLoading = false;
+      this.addFirst = (cnt = 1) => {
+        this.keyFront -= cnt;
+        return this.keyFront;
+      };
+      this.removeFirst = (cnt = 1) => {
+        this.keyFront += cnt;
+        return this.keyFront;
+      };
+      this.addLast = (cnt = 1) => {
+        this.keyBack += cnt;
+        return this.keyBack;
+      };
+      this.removeLast = (cnt = 1) => {
+        this.keyBack -= cnt;
+        return this.keyBack;
+      };
 
-      while (this.renderedH < 1.5 * this.vpH) {
-        const item = getItem(this.keyBack);
-        $(item).attr("data-inf-scr-key", this.keyBack);
-        this.keyBack += 1;
-        this.list.append(item);
-        this.renderedH += item.outerHeight();
+      function createLoadingPlaceholder(getContent) {
+        const $b = $("<div class='vs--item__loading'>loading</div>");
+        getContent().then(($item) => {
+          $item.insertAfter($b);
+          $b.remove();
+        });
+        return $b;
       }
 
-      this.list.append($("<div class='content loading'>loading</div>"));
+      this.addManyItems = (keys, keyModifier, effectiveKey, listModifier) => {
+        const wg = new WaitGroup();
+        for (const key of keys) {
+          keyModifier();
+          wg.add();
+          const $item = createLoadingPlaceholder(() =>
+            this.getItem(this[effectiveKey]).then((i) => {
+              wg.done();
+              return i;
+            }),
+          );
+          $item.attr("data-inf-scr-key", this[effectiveKey]);
+          listModifier($item);
+        }
+        return wg.wait();
+      };
+
+      this.isLoading = true;
+      this.addManyItems(
+        genNumbers(this.keyBack, 6),
+        this.addLast,
+        "keyBack",
+        this.list.append.bind(this.list),
+      ).then(() => (this.isLoading = false));
 
       document.addEventListener(
-        "scroll",
-        () => {
-          console.log(
-            "whether to append to list",
-            this.renderedH,
-            document.documentElement.scrollTop,
-          );
-          if (
-            this.renderedH - document.documentElement.scrollTop <
-            1.5 * this.vpH
-          ) {
-            const item = getItem(this.keyBack);
-            $(item).attr("data-inf-scr-key", this.keyBack);
-            this.keyBack += 1;
-            this.list.append(item);
-            this.renderedH += item.outerHeight();
+        "wheel",
+        (e) => {
+          if (this.isLoading) {
+            return;
+          }
+          this.isLoading = true;
+
+          const viewportUp = e.deltaY < 0;
+          let updateKey, effectiveKey, updateList;
+          if (viewportUp) {
+            updateKey = this.addFirst.bind(this);
+            effectiveKey = "keyFront";
+            updateList = this.list.prepend.bind(this.list);
+          } else {
+            updateKey = this.addLast.bind(this);
+            effectiveKey = "keyBack";
+            updateList = this.list.append.bind(this.list);
           }
 
-          const minKeyFront = this.keyBack - 7;
-          if (minKeyFront >= 0) {
-            for (let toDelete = 0; toDelete < minKeyFront; toDelete++) {
-              this.list.children(`[data-inf-scr-key=${toDelete}]`).remove();
-              this.keyFront += 1;
-            }
-          }
+          this.addManyItems(
+            genNumbers(this[effectiveKey], 3, Math.sign(e.deltaY)),
+            updateKey,
+            effectiveKey,
+            updateList,
+          ).then(() => (this.isLoading = false));
         },
         { passive: true },
       );
-    })(800, (key) => $(`<div class="content">${key}</div>`), $("main"));
+    })(
+      $list.innerHeight(),
+      (key) => {
+        const $c = $(`<div class="content">${key}</div>`);
+        $c.css("height", Math.round(100 + 200 * Math.random()));
+        return resolveAfter(1000 + 1000 * Math.random(), $c);
+      },
+      $list,
+    );
 
     $(document).on("scroll wheel", (e) => {
       console.log("document event", e.type, e);
