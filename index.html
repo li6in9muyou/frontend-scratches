@@ -85,22 +85,6 @@
       this.keyFront = 0;
       this.keyBack = 0;
       this.isLoading = false;
-      this.addFirst = (cnt = 1) => {
-        this.keyFront -= cnt;
-        return this.keyFront;
-      };
-      this.removeFirst = (cnt = 1) => {
-        this.keyFront += cnt;
-        return this.keyFront;
-      };
-      this.addLast = (cnt = 1) => {
-        this.keyBack += cnt;
-        return this.keyBack;
-      };
-      this.removeLast = (cnt = 1) => {
-        this.keyBack -= cnt;
-        return this.keyBack;
-      };
 
       function createLoadingPlaceholder(getContent) {
         const $b = $("<div class='ifs--item__loading'>loading</div>");
@@ -111,15 +95,15 @@
         return $b;
       }
 
-      this.addManyItems = (keys, keyModifier, effectiveKey, listModifier) => {
+      this.__helperAddManyItems = (cnt, getNextKey, listModifier) => {
         const wg = new WaitGroup();
-        for (const key of keys) {
-          const thisKey = keyModifier();
+        for (let i = 0; i < cnt; i++) {
           wg.add();
+          const key = getNextKey();
           const $item = createLoadingPlaceholder(() =>
-            this.getItem(thisKey).then(($item) => {
+            this.getItem(key).then(($item) => {
               wg.done();
-              $item.attr("data-ifs-key", thisKey);
+              $item.attr("data-ifs-key", key);
               return $item;
             }),
           );
@@ -128,13 +112,30 @@
         return wg.wait();
       };
 
+      this.addFrontManyItems = (cnt = 3) => {
+        return this.__helperAddManyItems(
+          cnt,
+          () => {
+            this.keyFront -= 1;
+            return this.keyFront;
+          },
+          this.list.prepend.bind(this.list),
+        );
+      };
+
+      this.addBackManyItems = (cnt = 3) => {
+        return this.__helperAddManyItems(
+          cnt,
+          () => {
+            this.keyBack += 1;
+            return this.keyBack;
+          },
+          this.list.append.bind(this.list),
+        );
+      };
+
       this.isLoading = true;
-      this.addManyItems(
-        genNumbers(this.keyBack, 6),
-        this.addLast,
-        "keyBack",
-        this.list.append.bind(this.list),
-      ).then(() => (this.isLoading = false));
+      this.addBackManyItems(6).then(() => (this.isLoading = false));
 
       document.addEventListener(
         "wheel",
@@ -145,23 +146,11 @@
           this.isLoading = true;
 
           const viewportUp = e.deltaY < 0;
-          let updateKey, effectiveKey, updateList;
           if (viewportUp) {
-            updateKey = this.addFirst.bind(this);
-            effectiveKey = "keyFront";
-            updateList = this.list.prepend.bind(this.list);
+            this.addFrontManyItems(3).then(() => (this.isLoading = false));
           } else {
-            updateKey = this.addLast.bind(this);
-            effectiveKey = "keyBack";
-            updateList = this.list.append.bind(this.list);
+            this.addBackManyItems(3).then(() => (this.isLoading = false));
           }
-
-          this.addManyItems(
-            genNumbers(this[effectiveKey], 3, Math.sign(e.deltaY)),
-            updateKey,
-            effectiveKey,
-            updateList,
-          ).then(() => (this.isLoading = false));
         },
         { passive: true },
       );
