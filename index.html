@@ -134,8 +134,9 @@
         return this.__helperAddManyItems(
           cnt,
           () => {
+            const key = this.keyBack;
             this.keyBack += 1;
-            return this.keyBack;
+            return key;
           },
           this.list.append.bind(this.list),
         );
