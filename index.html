@@ -84,6 +84,7 @@
     const $list = $("main");
 
     const infiniteScrollEffect = new (function (viewportH, getItem, list) {
+      this.LOADING_PLACEHOLDER_H = 269;
       this.renderedH = 0;
       this.vpH = viewportH;
       this.list = list;
@@ -146,16 +147,26 @@
       document.addEventListener(
         "wheel",
         (e) => {
+          console.log("wheel event isLoading", this.isLoading);
           if (this.isLoading) {
             return;
           }
-          this.isLoading = true;
-
-          const viewportUp = e.deltaY < 0;
-          if (viewportUp) {
+          const scrollUp = e.deltaY < 0;
+          const scrollToBottom =
+            Math.abs(
+              this.list[0].scrollHeight -
+                this.list[0].clientHeight -
+                this.list[0].scrollTop,
+            ) < 3;
+          const scrollToTop = this.list.scrollTop() === 0;
+          if (scrollUp && scrollToTop) {
+            this.isLoading = true;
             this.addFrontManyItems(3).then(() => (this.isLoading = false));
-          } else {
+            this.list.scrollTop(3 * this.LOADING_PLACEHOLDER_H + e.deltaY);
+          } else if (!scrollUp && scrollToBottom) {
+            this.isLoading = true;
             this.addBackManyItems(3).then(() => (this.isLoading = false));
+            this.list.scrollTop(this.list.scrollTop() + e.deltaY);
           }
         },
         { passive: true },
