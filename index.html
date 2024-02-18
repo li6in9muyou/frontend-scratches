@@ -155,39 +155,53 @@
 
       this.__helperAddManyItems = (cnt, getNextKey, listModifier) => {
         this.isLoading = true;
-        const wg = new WaitGroup();
+
+        const batchGetItem = new Map();
+        const loadingPlaceholders = new Map();
+        const allItemLoaded = new WaitGroup();
         for (let i = 0; i < cnt; i++) {
-          wg.add();
+          allItemLoaded.add();
           const key = getNextKey();
-          const $loading = this.getLoading(key);
-          this.getItem(key)
+
+          const loading = this.getLoading(key);
+          const waitGetItem = this.getItem(key);
+          loadingPlaceholders.set(key, loading);
+          batchGetItem.set(key, waitGetItem);
+
+          waitGetItem
             .then(($item) => {
-              wg.done();
+              allItemLoaded.done();
               $item.attr("data-ifs-key", key);
               return $item;
             })
             .then(($item) => {
-              $item.insertAfter($loading);
-              $loading.remove();
+              $item.insertAfter(loading);
+              loading.remove();
+              return $item;
             });
-          listModifier($loading);
+          listModifier(loading);
         }
-        return wg
-          .wait()
-          .then(() => (this.isLoading = false))
-          .then(() => {
-            const items = this.list.children("[data-ifs-key]");
-            items.each((_, item) => {
-              this.obFront.unobserve(item);
-              this.obBack.unobserve(item);
-            });
-            this.obFront.observe(items.eq(0)[0]);
-            this.obBack.observe(items.eq(-1)[0]);
+
+        const w = allItemLoaded.wait();
+        w.then(() => (this.isLoading = false)).then(() => {
+          const items = this.list.children("[data-ifs-key]");
+          items.each((_, item) => {
+            this.obFront.unobserve(item);
+            this.obBack.unobserve(item);
           });
+          this.obFront.observe(items.eq(0)[0]);
+          this.obBack.observe(items.eq(-1)[0]);
+        });
+
+        return {
+          wait: w,
+          item: batchGetItem,
+          loading: loadingPlaceholders,
+        };
       };
 
       this.addFrontManyItems = (cnt = this.PRELOAD_ITEM_COUNT) => {
-        const wait = this.__helperAddManyItems(
+        const { wait, loading } = this.__helperAddManyItems(
           cnt,
           () => {
             this.keyFront -= 1;
@@ -206,8 +220,8 @@
         );
       };
 
-      this.addBackManyItems = (cnt = this.PRELOAD_ITEM_COUNT) =>
-        this.__helperAddManyItems(
+      this.addBackManyItems = (cnt = this.PRELOAD_ITEM_COUNT) => {
+        const { wait: waitAllLoaded } = this.__helperAddManyItems(
           cnt,
           () => {
             if (Number.isNaN(this.keyBack)) {
@@ -219,12 +233,15 @@
             return this.keyBack;
           },
           this.list.append.bind(this.list),
-        ).then(() =>
+        );
+        waitAllLoaded.then(() =>
           this.__helperRemoveManyItems(
             this.getExcessiveItemCnt(),
             () => this.keyFront++,
           ),
         );
+        return waitAllLoaded;
+      };
 
       this.addBackManyItems(this.INIT_ITEM_COUNT);
     })($list, (key) => {
