@@ -90,7 +90,7 @@
       this.list = list;
       this.getItem = getItem;
       this.keyFront = 0;
-      this.keyBack = 0;
+      this.keyBack = NaN;
       this.isLoading = false;
       this.obBack = new IntersectionObserver(
         (entries) => {
@@ -158,19 +158,26 @@
       };
 
       this.addBackManyItems = (cnt = 3) => {
+        const prevKeyBack = this.keyBack;
         return this.__helperAddManyItems(
           cnt,
           () => {
-            const key = this.keyBack;
-            this.keyBack += 1;
-            return key;
+            if (Number.isNaN(this.keyBack)) {
+              this.keyBack = 0;
+              return this.keyBack;
+            } else {
+              this.keyBack++;
+            }
+            return this.keyBack;
           },
           this.list.append.bind(this.list),
         )
           .then(() => {
-            this.obBack.unobserve(
-              this.list.children(`[data-ifs-key='${this.keyBack - cnt}']`)[0],
-            );
+            if (!Number.isNaN(prevKeyBack)) {
+              this.obBack.unobserve(
+                this.list.children(`[data-ifs-key='${prevKeyBack}']`)[0],
+              );
+            }
             this.obBack.observe(
               this.list.children(`[data-ifs-key='${this.keyBack}']`)[0],
             );
