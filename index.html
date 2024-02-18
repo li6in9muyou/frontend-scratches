@@ -26,18 +26,6 @@
         font-size: 90px;
       }
     </style>
-
-    <style>
-      .ifs--item__loading {
-        box-sizing: border-box;
-        height: 269px;
-        margin: 6px;
-        text-align: center;
-        background-color: dimgray;
-        border: solid 2px white;
-        font-size: 90px;
-      }
-    </style>
   </head>
   <body>
     <main></main>
@@ -85,10 +73,22 @@
     const $list = $("main");
 
     const infiniteScrollEffect = new (function (list, getItem, options) {
-      this.LOADING_PLACEHOLDER_H = 269 + 6;
       this.MAX_ITEM_COUNT = options?.maxLen ?? 10;
       this.INIT_ITEM_COUNT = options?.initLen ?? 6;
       this.PRELOAD_ITEM_COUNT = options?.preload ?? 3;
+      this.getLoading =
+        options?.getLoading ??
+        (() =>
+          $("<div>loading</div>").css({
+            "box-sizing": "border-box",
+            height: "269px",
+            margin: "6px",
+            "text-align": "center",
+            "background-color": "dimgray",
+            border: "solid 2px white",
+            "font-size": " 90px",
+          }));
+      this.LOADING_PLACEHOLDER_H = 269 + 6;
       this.list = list;
       this.getItem = getItem;
       this.keyFront = 0;
@@ -139,17 +139,8 @@
       this.getExcessiveItemCnt = () =>
         this.keyBack - this.keyFront - this.MAX_ITEM_COUNT + 1;
 
-      function createLoadingPlaceholder(getContent) {
-        const $b = $("<div class='ifs--item__loading'>loading</div>");
-        getContent().then(($item) => {
-          $item.insertAfter($b);
-          $b.remove();
-        });
-        return $b;
-      }
-
       this.__helperRemoveManyItems = (cnt, getNextKey) => {
-        this.list.children(".content").each((_, item) => {
+        this.list.children("[data-ifs-key]").each((_, item) => {
           this.obFront.unobserve(item);
           this.obBack.unobserve(item);
         });
@@ -157,7 +148,7 @@
           const key = getNextKey();
           this.list.children(`[data-ifs-key='${key}']`).remove();
         }
-        const items = this.list.children(".content");
+        const items = this.list.children("[data-ifs-key]");
         this.obFront.observe(items.eq(0)[0]);
         this.obBack.observe(items.eq(-1)[0]);
       };
@@ -168,20 +159,24 @@
         for (let i = 0; i < cnt; i++) {
           wg.add();
           const key = getNextKey();
-          const $item = createLoadingPlaceholder(() =>
-            this.getItem(key).then(($item) => {
+          const $loading = this.getLoading(key);
+          this.getItem(key)
+            .then(($item) => {
               wg.done();
               $item.attr("data-ifs-key", key);
               return $item;
-            }),
-          );
-          listModifier($item);
+            })
+            .then(($item) => {
+              $item.insertAfter($loading);
+              $loading.remove();
+            });
+          listModifier($loading);
         }
         return wg
           .wait()
           .then(() => (this.isLoading = false))
           .then(() => {
-            const items = this.list.children(".content");
+            const items = this.list.children("[data-ifs-key]");
             items.each((_, item) => {
               this.obFront.unobserve(item);
               this.obBack.unobserve(item);
