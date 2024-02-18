@@ -70,9 +70,7 @@
     });
   </script>
   <script type="module">
-    const $list = $("main");
-
-    addInfiniteScrollEffect($list, (key) => {
+    addInfiniteScrollEffect($("main"), (key) => {
       const $c = $(`<div class="content">${key}</div>`);
       $c.css("height", Math.round(100 + 200 * Math.random()));
       return resolveAfter(1000 + 1000 * Math.random(), $c);
@@ -95,7 +93,7 @@
               border: "solid 2px white",
               "font-size": " 90px",
             }));
-        this.list = list;
+        this.$list = $(list);
         this.getItem = getItem;
         this.keyFront = 0;
         this.keyBack = NaN;
@@ -116,7 +114,7 @@
             }
           },
           {
-            root: this.list[0] ?? this.list,
+            root: this.$list[0] ?? this.$list,
             rootMargin: "0px",
             threshold: [0.75],
           },
@@ -137,7 +135,7 @@
             }
           },
           {
-            root: this.list[0] ?? this.list,
+            root: this.$list[0] ?? this.$list,
             rootMargin: "0px",
             threshold: [0.75],
           },
@@ -146,15 +144,15 @@
           this.keyBack - this.keyFront - this.MAX_ITEM_COUNT + 1;
 
         this.__helperRemoveManyItems = (cnt, getNextKey) => {
-          this.list.children("[data-ifs-key]").each((_, item) => {
+          this.$list.children("[data-ifs-key]").each((_, item) => {
             this.obFront.unobserve(item);
             this.obBack.unobserve(item);
           });
           for (let i = 0; i < cnt; i++) {
             const key = getNextKey();
-            this.list.children(`[data-ifs-key='${key}']`).remove();
+            this.$list.children(`[data-ifs-key='${key}']`).remove();
           }
-          const items = this.list.children("[data-ifs-key]");
+          const items = this.$list.children("[data-ifs-key]");
           this.obFront.observe(items.eq(0)[0]);
           this.obBack.observe(items.eq(-1)[0]);
         };
@@ -175,6 +173,7 @@
             batchGetItem.set(key, waitGetItem);
 
             waitGetItem
+              .then((item) => $(item))
               .then(($item) => {
                 allItemLoaded.done();
                 $item.attr("data-ifs-key", key);
@@ -190,7 +189,7 @@
 
           const w = allItemLoaded.wait();
           w.then(() => (this.isLoading = false)).then(() => {
-            const items = this.list.children("[data-ifs-key]");
+            const items = this.$list.children("[data-ifs-key]");
             items.each((_, item) => {
               this.obFront.unobserve(item);
               this.obBack.unobserve(item);
@@ -213,9 +212,9 @@
               this.keyFront -= 1;
               return this.keyFront;
             },
-            this.list.prepend.bind(this.list),
+            this.$list.prepend.bind(this.$list),
           );
-          this.list.scrollTop(
+          this.$list.scrollTop(
             Array.from(loading.values()).reduce(
               (h, ld) => $(ld).outerHeight(true) + h,
               0,
@@ -241,7 +240,7 @@
               }
               return this.keyBack;
             },
-            this.list.append.bind(this.list),
+            this.$list.append.bind(this.$list),
           );
           waitAllLoaded.then(() =>
             this.__helperRemoveManyItems(
