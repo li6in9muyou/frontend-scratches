@@ -214,6 +214,7 @@
             },
             this.$list.prepend.bind(this.$list),
           );
+          // todo: changing initValue to -18 makes key=0 item stay perfectly still, but I don't know how to compute this value
           this.$list.scrollTop(
             Array.from(loading.values()).reduce(
               (h, ld) => $(ld).outerHeight(true) + h,
