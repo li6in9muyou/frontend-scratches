@@ -88,7 +88,6 @@
             border: "solid 2px white",
             "font-size": " 90px",
           }));
-      this.LOADING_PLACEHOLDER_H = 269 + 6;
       this.list = list;
       this.getItem = getItem;
       this.keyFront = 0;
@@ -210,7 +209,10 @@
           this.list.prepend.bind(this.list),
         );
         this.list.scrollTop(
-          this.PRELOAD_ITEM_COUNT * this.LOADING_PLACEHOLDER_H,
+          Array.from(loading.values()).reduce(
+            (h, ld) => $(ld).outerHeight(true) + h,
+            0,
+          ),
         );
         return wait.then(() =>
           this.__helperRemoveManyItems(
