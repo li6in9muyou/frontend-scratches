@@ -103,6 +103,7 @@
       }
 
       this.__helperAddManyItems = (cnt, getNextKey, listModifier) => {
+        this.isLoading = true;
         const wg = new WaitGroup();
         for (let i = 0; i < cnt; i++) {
           wg.add();
@@ -116,7 +117,7 @@
           );
           listModifier($item);
         }
-        return wg.wait();
+        return wg.wait().then(() => (this.isLoading = false));
       };
 
       this.addFrontManyItems = (cnt = 3) => {
@@ -153,7 +154,7 @@
       };
 
       this.isLoading = true;
-      this.addBackManyItems(6).then(() => (this.isLoading = false));
+      this.addBackManyItems(6);
 
       document.addEventListener(
         "wheel",
@@ -171,8 +172,7 @@
             ) < 3;
           const scrollToTop = this.list.scrollTop() === 0;
           if (scrollUp && scrollToTop) {
-            this.isLoading = true;
-            this.addFrontManyItems(3).then(() => (this.isLoading = false));
+            this.addFrontManyItems(3);
             this.list.scrollTop(3 * this.LOADING_PLACEHOLDER_H + e.deltaY);
           } else if (!scrollUp && scrollToBottom) {
             this.isLoading = true;
