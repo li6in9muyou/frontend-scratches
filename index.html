@@ -127,7 +127,12 @@
             return this.keyFront;
           },
           this.list.prepend.bind(this.list),
-        );
+        ).then(() => {
+          while (this.keyBack - this.keyFront > 8) {
+            this.list.children(`[data-ifs-key='${this.keyBack}']`).remove();
+            this.keyBack--;
+          }
+        });
       };
 
       this.addBackManyItems = (cnt = 3) => {
@@ -139,7 +144,12 @@
             return key;
           },
           this.list.append.bind(this.list),
-        );
+        ).then(() => {
+          while (this.keyBack - this.keyFront > 10) {
+            this.list.children(`[data-ifs-key='${this.keyFront}']`).remove();
+            this.keyFront++;
+          }
+        });
       };
 
       this.isLoading = true;
