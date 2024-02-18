@@ -206,8 +206,8 @@
         );
       };
 
-      this.addBackManyItems = (cnt = 3) => {
-        return this.__helperAddManyItems(
+      this.addBackManyItems = (cnt = 3) =>
+        this.__helperAddManyItems(
           cnt,
           () => {
             if (Number.isNaN(this.keyBack)) {
@@ -225,7 +225,6 @@
             () => this.keyFront++,
           ),
         );
-      };
 
       this.addBackManyItems(6);
     })(
