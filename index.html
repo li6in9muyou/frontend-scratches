@@ -29,6 +29,7 @@
 
     <style>
       .ifs--item__loading {
+        box-sizing: border-box;
         height: 269px;
         margin: 6px;
         text-align: center;
@@ -84,7 +85,7 @@
     const $list = $("main");
 
     const infiniteScrollEffect = new (function (viewportH, getItem, list) {
-      this.LOADING_PLACEHOLDER_H = 269;
+      this.LOADING_PLACEHOLDER_H = 269 + 6;
       this.renderedH = 0;
       this.vpH = viewportH;
       this.list = list;
@@ -92,6 +93,27 @@
       this.keyFront = 0;
       this.keyBack = NaN;
       this.isLoading = false;
+      this.obFront = new IntersectionObserver(
+        (entries) => {
+          console.assert(
+            entries.length === 1,
+            "multiple observation targets in this.obFront",
+          );
+          const front = entries[0];
+          console.log(
+            "this.obFront:" + $(front.target).text(),
+            front.intersectionRatio,
+          );
+          if (front.intersectionRatio > 0.75) {
+            this.addFrontManyItems(3);
+          }
+        },
+        {
+          root: this.list[0] ?? this.list,
+          rootMargin: "0px",
+          threshold: [0.75],
+        },
+      );
       this.obBack = new IntersectionObserver(
         (entries) => {
           console.assert(
@@ -142,19 +164,42 @@
       };
 
       this.addFrontManyItems = (cnt = 3) => {
-        return this.__helperAddManyItems(
+        const prevKeyFront = this.keyFront;
+        const wait = this.__helperAddManyItems(
           cnt,
           () => {
             this.keyFront -= 1;
             return this.keyFront;
           },
           this.list.prepend.bind(this.list),
-        ).then(() => {
-          while (this.keyBack - this.keyFront > 8) {
-            this.list.children(`[data-ifs-key='${this.keyBack}']`).remove();
-            this.keyBack--;
-          }
-        });
+        )
+          .then(() => {
+            this.obFront.unobserve(
+              this.list.children(`[data-ifs-key='${prevKeyFront}']`)[0],
+            );
+            this.obFront.observe(
+              this.list.children(`[data-ifs-key='${this.keyFront}']`)[0],
+            );
+          })
+          .then(() => {
+            const prevKeyBack = this.keyBack;
+            while (this.keyBack - this.keyFront > 8) {
+              this.list.children(`[data-ifs-key='${this.keyBack}']`).remove();
+              this.keyBack--;
+            }
+            if (prevKeyBack !== this.keyBack) {
+              if (!Number.isNaN(prevKeyBack)) {
+                this.obBack.unobserve(
+                  this.list.children(`[data-ifs-key='${prevKeyBack}']`)[0],
+                );
+              }
+              this.obBack.observe(
+                this.list.children(`[data-ifs-key='${this.keyBack}']`)[0],
+              );
+            }
+          });
+        this.list.scrollTop(3 * this.LOADING_PLACEHOLDER_H);
+        return wait;
       };
 
       this.addBackManyItems = (cnt = 3) => {
@@ -183,41 +228,33 @@
             );
           })
           .then(() => {
+            const prevKeyFront = this.keyFront;
             while (this.keyBack - this.keyFront > 10) {
               this.list.children(`[data-ifs-key='${this.keyFront}']`).remove();
               this.keyFront++;
             }
+            if (prevKeyFront !== this.keyFront) {
+              this.obFront.unobserve(
+                this.list.children(`[data-ifs-key='${prevKeyFront}']`)[0],
+              );
+              this.obFront.observe(
+                this.list.children(`[data-ifs-key='${this.keyFront}']`)[0],
+              );
+            }
           });
       };
 
-      this.addBackManyItems(6).then(() =>
-        this.obBack.observe(
-          this.list.children(`[data-ifs-key='${this.keyBack}']`)[0],
-        ),
-      );
-
-      document.addEventListener(
-        "wheel",
-        (e) => {
-          console.log("wheel event isLoading", this.isLoading);
-          if (this.isLoading) {
-            return;
-          }
-          const scrollUp = e.deltaY < 0;
-          const scrollToBottom =
-            Math.abs(
-              this.list[0].scrollHeight -
-                this.list[0].clientHeight -
-                this.list[0].scrollTop,
-            ) < 3;
-          const scrollToTop = this.list.scrollTop() === 0;
-          if (scrollUp && scrollToTop) {
-            this.addFrontManyItems(3);
-            this.list.scrollTop(3 * this.LOADING_PLACEHOLDER_H + e.deltaY);
-          }
-        },
-        { passive: true },
-      );
+      this.addBackManyItems(6)
+        .then(() =>
+          this.obBack.observe(
+            this.list.children(`[data-ifs-key='${this.keyBack}']`)[0],
+          ),
+        )
+        .then(() =>
+          this.obFront.observe(
+            this.list.children(`[data-ifs-key='${this.keyFront}']`)[0],
+          ),
+        );
     })(
       $list.innerHeight(),
       (key) => {
