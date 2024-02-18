@@ -104,7 +104,7 @@
             "this.obFront:" + $(front.target).text(),
             front.intersectionRatio,
           );
-          if (front.intersectionRatio > 0.75) {
+          if (front.intersectionRatio > 0.75 && !this.isLoading) {
             this.addFrontManyItems(3);
           }
         },
@@ -125,7 +125,7 @@
             "this.obBack:" + $(back.target).text(),
             back.intersectionRatio,
           );
-          if (back.intersectionRatio > 0.75) {
+          if (back.intersectionRatio > 0.75 && !this.isLoading) {
             this.addBackManyItems(3);
           }
         },
@@ -145,6 +145,20 @@
         return $b;
       }
 
+      this.__helperRemoveManyItems = (cnt, getNextKey) => {
+        this.list.children(".content").each((_, item) => {
+          this.obFront.unobserve(item);
+          this.obBack.unobserve(item);
+        });
+        for (let i = 0; i < cnt; i++) {
+          const key = getNextKey();
+          this.list.children(`[data-ifs-key='${key}']`).remove();
+        }
+        const items = this.list.children(".content");
+        this.obFront.observe(items.eq(0)[0]);
+        this.obBack.observe(items.eq(-1)[0]);
+      };
+
       this.__helperAddManyItems = (cnt, getNextKey, listModifier) => {
         this.isLoading = true;
         const wg = new WaitGroup();
@@ -160,11 +174,21 @@
           );
           listModifier($item);
         }
-        return wg.wait().then(() => (this.isLoading = false));
+        return wg
+          .wait()
+          .then(() => (this.isLoading = false))
+          .then(() => {
+            const items = this.list.children(".content");
+            items.each((_, item) => {
+              this.obFront.unobserve(item);
+              this.obBack.unobserve(item);
+            });
+            this.obFront.observe(items.eq(0)[0]);
+            this.obBack.observe(items.eq(-1)[0]);
+          });
       };
 
       this.addFrontManyItems = (cnt = 3) => {
-        const prevKeyFront = this.keyFront;
         const wait = this.__helperAddManyItems(
           cnt,
           () => {
@@ -172,38 +196,17 @@
             return this.keyFront;
           },
           this.list.prepend.bind(this.list),
-        )
-          .then(() => {
-            this.obFront.unobserve(
-              this.list.children(`[data-ifs-key='${prevKeyFront}']`)[0],
-            );
-            this.obFront.observe(
-              this.list.children(`[data-ifs-key='${this.keyFront}']`)[0],
-            );
-          })
-          .then(() => {
-            const prevKeyBack = this.keyBack;
-            while (this.keyBack - this.keyFront > 8) {
-              this.list.children(`[data-ifs-key='${this.keyBack}']`).remove();
-              this.keyBack--;
-            }
-            if (prevKeyBack !== this.keyBack) {
-              if (!Number.isNaN(prevKeyBack)) {
-                this.obBack.unobserve(
-                  this.list.children(`[data-ifs-key='${prevKeyBack}']`)[0],
-                );
-              }
-              this.obBack.observe(
-                this.list.children(`[data-ifs-key='${this.keyBack}']`)[0],
-              );
-            }
-          });
+        );
         this.list.scrollTop(3 * this.LOADING_PLACEHOLDER_H);
-        return wait;
+        return wait.then(() =>
+          this.__helperRemoveManyItems(
+            this.keyBack - this.keyFront - 8,
+            () => this.keyBack--,
+          ),
+        );
       };
 
       this.addBackManyItems = (cnt = 3) => {
-        const prevKeyBack = this.keyBack;
         return this.__helperAddManyItems(
           cnt,
           () => {
@@ -216,45 +219,15 @@
             return this.keyBack;
           },
           this.list.append.bind(this.list),
-        )
-          .then(() => {
-            if (!Number.isNaN(prevKeyBack)) {
-              this.obBack.unobserve(
-                this.list.children(`[data-ifs-key='${prevKeyBack}']`)[0],
-              );
-            }
-            this.obBack.observe(
-              this.list.children(`[data-ifs-key='${this.keyBack}']`)[0],
-            );
-          })
-          .then(() => {
-            const prevKeyFront = this.keyFront;
-            while (this.keyBack - this.keyFront > 10) {
-              this.list.children(`[data-ifs-key='${this.keyFront}']`).remove();
-              this.keyFront++;
-            }
-            if (prevKeyFront !== this.keyFront) {
-              this.obFront.unobserve(
-                this.list.children(`[data-ifs-key='${prevKeyFront}']`)[0],
-              );
-              this.obFront.observe(
-                this.list.children(`[data-ifs-key='${this.keyFront}']`)[0],
-              );
-            }
-          });
-      };
-
-      this.addBackManyItems(6)
-        .then(() =>
-          this.obBack.observe(
-            this.list.children(`[data-ifs-key='${this.keyBack}']`)[0],
-          ),
-        )
-        .then(() =>
-          this.obFront.observe(
-            this.list.children(`[data-ifs-key='${this.keyFront}']`)[0],
+        ).then(() =>
+          this.__helperRemoveManyItems(
+            this.keyBack - this.keyFront - 8,
+            () => this.keyFront++,
           ),
         );
+      };
+
+      this.addBackManyItems(6);
     })(
       $list.innerHeight(),
       (key) => {
