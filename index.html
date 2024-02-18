@@ -84,10 +84,11 @@
   <script type="module">
     const $list = $("main");
 
-    const infiniteScrollEffect = new (function (viewportH, getItem, list) {
+    const infiniteScrollEffect = new (function (list, getItem, options) {
       this.LOADING_PLACEHOLDER_H = 269 + 6;
-      this.renderedH = 0;
-      this.vpH = viewportH;
+      this.MAX_ITEM_COUNT = options?.maxLen ?? 10;
+      this.INIT_ITEM_COUNT = options?.initLen ?? 6;
+      this.PRELOAD_ITEM_COUNT = options?.preload ?? 3;
       this.list = list;
       this.getItem = getItem;
       this.keyFront = 0;
@@ -105,7 +106,7 @@
             front.intersectionRatio,
           );
           if (front.intersectionRatio > 0.75 && !this.isLoading) {
-            this.addFrontManyItems(3);
+            this.addFrontManyItems(this.PRELOAD_ITEM_COUNT);
           }
         },
         {
@@ -126,7 +127,7 @@
             back.intersectionRatio,
           );
           if (back.intersectionRatio > 0.75 && !this.isLoading) {
-            this.addBackManyItems(3);
+            this.addBackManyItems(this.PRELOAD_ITEM_COUNT);
           }
         },
         {
@@ -135,6 +136,8 @@
           threshold: [0.75],
         },
       );
+      this.getExcessiveItemCnt = () =>
+        this.keyBack - this.keyFront - this.MAX_ITEM_COUNT + 1;
 
       function createLoadingPlaceholder(getContent) {
         const $b = $("<div class='ifs--item__loading'>loading</div>");
@@ -188,7 +191,7 @@
           });
       };
 
-      this.addFrontManyItems = (cnt = 3) => {
+      this.addFrontManyItems = (cnt = this.PRELOAD_ITEM_COUNT) => {
         const wait = this.__helperAddManyItems(
           cnt,
           () => {
@@ -197,16 +200,18 @@
           },
           this.list.prepend.bind(this.list),
         );
-        this.list.scrollTop(3 * this.LOADING_PLACEHOLDER_H);
+        this.list.scrollTop(
+          this.PRELOAD_ITEM_COUNT * this.LOADING_PLACEHOLDER_H,
+        );
         return wait.then(() =>
           this.__helperRemoveManyItems(
-            this.keyBack - this.keyFront - 8,
+            this.getExcessiveItemCnt(),
             () => this.keyBack--,
           ),
         );
       };
 
-      this.addBackManyItems = (cnt = 3) =>
+      this.addBackManyItems = (cnt = this.PRELOAD_ITEM_COUNT) =>
         this.__helperAddManyItems(
           cnt,
           () => {
@@ -221,20 +226,16 @@
           this.list.append.bind(this.list),
         ).then(() =>
           this.__helperRemoveManyItems(
-            this.keyBack - this.keyFront - 8,
+            this.getExcessiveItemCnt(),
             () => this.keyFront++,
           ),
         );
 
-      this.addBackManyItems(6);
-    })(
-      $list.innerHeight(),
-      (key) => {
-        const $c = $(`<div class="content">${key}</div>`);
-        $c.css("height", Math.round(100 + 200 * Math.random()));
-        return resolveAfter(1000 + 1000 * Math.random(), $c);
-      },
-      $list,
-    );
+      this.addBackManyItems(this.INIT_ITEM_COUNT);
+    })($list, (key) => {
+      const $c = $(`<div class="content">${key}</div>`);
+      $c.css("height", Math.round(100 + 200 * Math.random()));
+      return resolveAfter(1000 + 1000 * Math.random(), $c);
+    });
   </script>
 </html>
