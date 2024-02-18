@@ -92,6 +92,27 @@
       this.keyFront = 0;
       this.keyBack = 0;
       this.isLoading = false;
+      this.obBack = new IntersectionObserver(
+        (entries) => {
+          console.assert(
+            entries.length === 1,
+            "multiple observation targets in this.obBack",
+          );
+          const back = entries[0];
+          console.log(
+            "this.obBack:" + $(back.target).text(),
+            back.intersectionRatio,
+          );
+          if (back.intersectionRatio > 0.75) {
+            this.addBackManyItems(3);
+          }
+        },
+        {
+          root: this.list[0] ?? this.list,
+          rootMargin: "0px",
+          threshold: [0.75],
+        },
+      );
 
       function createLoadingPlaceholder(getContent) {
         const $b = $("<div class='ifs--item__loading'>loading</div>");
@@ -145,16 +166,29 @@
             return key;
           },
           this.list.append.bind(this.list),
-        ).then(() => {
-          while (this.keyBack - this.keyFront > 10) {
-            this.list.children(`[data-ifs-key='${this.keyFront}']`).remove();
-            this.keyFront++;
-          }
-        });
+        )
+          .then(() => {
+            this.obBack.unobserve(
+              this.list.children(`[data-ifs-key='${this.keyBack - cnt}']`)[0],
+            );
+            this.obBack.observe(
+              this.list.children(`[data-ifs-key='${this.keyBack}']`)[0],
+            );
+          })
+          .then(() => {
+            while (this.keyBack - this.keyFront > 10) {
+              this.list.children(`[data-ifs-key='${this.keyFront}']`).remove();
+              this.keyFront++;
+            }
+          });
       };
 
       this.isLoading = true;
-      this.addBackManyItems(6);
+      this.addBackManyItems(6).then(() =>
+        this.obBack.observe(
+          this.list.children(`[data-ifs-key='${this.keyBack}']`)[0],
+        ),
+      );
 
       document.addEventListener(
         "wheel",
@@ -174,10 +208,6 @@
           if (scrollUp && scrollToTop) {
             this.addFrontManyItems(3);
             this.list.scrollTop(3 * this.LOADING_PLACEHOLDER_H + e.deltaY);
-          } else if (!scrollUp && scrollToBottom) {
-            this.isLoading = true;
-            this.addBackManyItems(3).then(() => (this.isLoading = false));
-            this.list.scrollTop(this.list.scrollTop() + e.deltaY);
           }
         },
         { passive: true },
