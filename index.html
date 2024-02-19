@@ -2,7 +2,7 @@
 <html lang="zh" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <title>事件闭包</title>
+    <title>闭包</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
@@ -10,104 +10,38 @@
         background-color: black;
         color: white;
       }
-
-      h2 {
-        cursor: pointer;
-        border: solid 5px limegreen;
-      }
-
-      main {
-        height: 654px;
-        overflow-y: auto;
-      }
-
-      .btn {
-        height: 269px;
-        margin: 6px 6px 0 6px;
-        text-align: center;
-        background-color: mediumvioletred;
-        border: solid 2px white;
-        font-size: 3rem;
-      }
-
-      .bg-red {
-        background-color: red;
-      }
-
-      .bg-green {
-        background-color: limegreen;
-      }
     </style>
   </head>
-  <body>
-    <main>
-      <button class="btn">foo: open heading <i></i></button>
-      <button class="btn">bar: open heading <i></i></button>
-    </main>
-    <p>期望行为</p>
-    <ol>
-      <li>点击foo</li>
-      <li>头条展开</li>
-      <li>点击头条</li>
-      <li>foo文字更新</li>
-      <li>头条收起</li>
-      <li>点击bar</li>
-      <li>头条展开</li>
-      <li>点击头条</li>
-      <li>bar文字更新</li>
-      <li>头条收起</li>
-      <li>头条里面的数字为2</li>
-    </ol>
-    <p class="bg-green">实际行为</p>
-    <ol>
-      <li>点击foo</li>
-      <li>头条展开</li>
-      <li>点击头条</li>
-      <li>foo文字更新</li>
-      <li>头条收起</li>
-      <li>点击bar</li>
-      <li>头条展开</li>
-      <li>点击头条</li>
-      <li>bar文字更新</li>
-      <li>头条收起</li>
-      <li>头条里面的数字为2</li>
-    </ol>
-  </body>
-  <script src="js/jquery.js"></script>
+
   <script type="module">
-    const $main = $("main");
-    let cntCallbackFired = 0;
-
-    $(".btn").on("click", (e) => {
-      const $b = $(e.target);
-      const $nText = $b.children("i");
-      const close = showHeading(null, (n) => {
-        $nText.text(n);
-        close();
-      });
-    });
-
-    function showHeading(_, callback) {
-      console.log("showHeading", _);
-
-      let $h2 = $main.children("h2");
-      if ($h2.length === 0) {
-        const $t = $("<h2>");
-        $t.prependTo($main);
-        $t.text("heading: " + cntCallbackFired);
-        $h2 = $t;
-      } else {
-        $h2.slideDown();
-      }
-      $h2.on("click.thisSession", () => {
-        callback(Math.random().toFixed(3));
-        cntCallbackFired += 1;
-        $h2.text("heading: " + cntCallbackFired);
-      });
+    function foo(f) {
+      let i = 1;
       return () => {
-        $h2.off("click.thisSession");
-        $h2.slideUp(1000);
+        i *= f;
+        return i;
       };
     }
+    const two = foo(2);
+    const three = foo(3);
+    console.log(two(), three());
+    console.log(two(), three());
+    console.log("it shows that closure is created every time foo is called");
+  </script>
+
+  <script type="module">
+    function foo(f) {
+      let i = 1;
+      const arr = [];
+      return () => {
+        i *= f.f;
+        arr.push(i);
+        return arr[arr.length - 1];
+      };
+    }
+    const two = foo({ f: 2 });
+    const three = foo({ f: 3 });
+    console.log(two(), three());
+    console.log(two(), three());
+    console.log("it shows that closure is created every time foo is called");
   </script>
 </html>
