@@ -11,25 +11,94 @@
         color: white;
       }
 
+      h2 {
+        cursor: pointer;
+        border: solid 5px limegreen;
+      }
+
       main {
         height: 654px;
-        border: solid 4px crimson;
         overflow-y: auto;
       }
 
-      .content {
+      .btn {
         height: 269px;
         margin: 6px 6px 0 6px;
         text-align: center;
         background-color: mediumvioletred;
         border: solid 2px white;
-        font-size: 90px;
+        font-size: 3rem;
+      }
+
+      .bg-red {
+        background-color: red;
       }
     </style>
   </head>
   <body>
-    <main></main>
+    <main>
+      <button class="btn">foo: open heading <i></i></button>
+      <button class="btn">bar: open heading <i></i></button>
+    </main>
+    <p>期望行为</p>
+    <ol>
+      <li>点击foo</li>
+      <li>头条展开</li>
+      <li>点击头条</li>
+      <li>foo文字更新</li>
+      <li>头条收起</li>
+      <li>点击bar</li>
+      <li>头条展开</li>
+      <li>点击头条</li>
+      <li>bar文字更新</li>
+      <li>头条收起</li>
+    </ol>
+    <p>实际行为</p>
+    <ol>
+      <li>点击foo</li>
+      <li>头条展开</li>
+      <li>点击头条</li>
+      <li>foo文字更新</li>
+      <li>头条收起</li>
+      <li>点击bar</li>
+      <li>头条展开</li>
+      <li>点击头条</li>
+      <li class="bg-red">foo文字又更新了一次</li>
+      <li>头条收起</li>
+    </ol>
   </body>
   <script src="js/jquery.js"></script>
-  <script></script>
+  <script type="module">
+    const $main = $("main");
+    let number = 0;
+
+    $(".btn").on("click", (e) => {
+      const $b = $(e.target);
+      const $nText = $b.children("i");
+      const close = showHeading(null, (n) => {
+        $nText.text(n);
+        close();
+      });
+    });
+
+    function showHeading(_, callback) {
+      console.log("showHeading", _);
+
+      let $h2 = $main.children("h2");
+      if ($h2.length === 0) {
+        const $t = $("<h2>");
+        $t.prependTo($main);
+        $t.text("heading: " + number);
+        $h2 = $t;
+        $h2.on("click", () => {
+          callback(Math.random().toFixed(3));
+          number += 1;
+          $h2.text("heading: " + number);
+        });
+      } else {
+        $h2.slideDown(100);
+      }
+      return () => $h2.slideUp();
+    }
+  </script>
 </html>
