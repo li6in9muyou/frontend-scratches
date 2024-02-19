@@ -33,6 +33,10 @@
       .bg-red {
         background-color: red;
       }
+
+      .bg-green {
+        background-color: limegreen;
+      }
     </style>
   </head>
   <body>
@@ -54,7 +58,7 @@
       <li>头条收起</li>
       <li>头条里面的数字为2</li>
     </ol>
-    <p>实际行为</p>
+    <p class="bg-green">实际行为</p>
     <ol>
       <li>点击foo</li>
       <li>头条展开</li>
@@ -66,7 +70,7 @@
       <li>点击头条</li>
       <li>bar文字更新</li>
       <li>头条收起</li>
-      <li class="bg-red">头条里面的数字为3</li>
+      <li>头条里面的数字为2</li>
     </ol>
   </body>
   <script src="js/jquery.js"></script>
@@ -95,12 +99,15 @@
       } else {
         $h2.slideDown();
       }
-      $h2.on("click", () => {
+      $h2.on("click.thisSession", () => {
         callback(Math.random().toFixed(3));
         cntCallbackFired += 1;
         $h2.text("heading: " + cntCallbackFired);
       });
-      return () => $h2.slideUp(1000);
+      return () => {
+        $h2.off("click.thisSession");
+        $h2.slideUp(1000);
+      };
     }
   </script>
 </html>
