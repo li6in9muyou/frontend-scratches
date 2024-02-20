@@ -2,46 +2,40 @@
 <html lang="zh" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <title>闭包</title>
+    <title>1344分区</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
+      html,
+      body {
+        height: 100vh;
+        width: 100vw;
+        margin: 0;
+        padding: 0;
+      }
       body {
         background-color: black;
         color: white;
+        display: grid;
+        grid-template-rows: repeat(48, 1fr);
+        grid-template-columns: repeat(27, 1fr);
       }
     </style>
   </head>
-
-  <script type="module">
-    function foo(f) {
-      let i = 1;
-      return () => {
-        i *= f;
-        return i;
-      };
+  <body></body>
+  <script src="js/jquery.js"></script>
+  <script>
+    const $body = $(document.body);
+    for (let i = 0; i < 1344; i++) {
+      $("<div class='led'>")
+        .appendTo($body)
+        .css(
+          "background-color",
+          "#" +
+            Math.floor(0xffffff * Math.random())
+              .toString(16)
+              .padStart(6, "0"),
+        );
     }
-    const two = foo(2);
-    const three = foo(3);
-    console.log(two(), three());
-    console.log(two(), three());
-    console.log("it shows that closure is created every time foo is called");
-  </script>
-
-  <script type="module">
-    function foo(f) {
-      let i = 1;
-      const arr = [];
-      return () => {
-        i *= f.f;
-        arr.push(i);
-        return arr[arr.length - 1];
-      };
-    }
-    const two = foo({ f: 2 });
-    const three = foo({ f: 3 });
-    console.log(two(), three());
-    console.log(two(), three());
-    console.log("it shows that closure is created every time foo is called");
   </script>
 </html>
