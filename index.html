@@ -2,7 +2,7 @@
 <html lang="zh" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <title>336分区</title>
+    <title>000分区</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
@@ -17,25 +17,112 @@
         background-color: black;
         color: white;
         display: grid;
-        grid-template-rows: repeat(24, 1fr);
-        grid-template-columns: repeat(14, 1fr);
+        position: relative;
+      }
+      #area-cnt {
+        position: absolute;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 100vh;
+        left: 0;
+        right: 0;
+        margin: auto;
+        color: limegreen;
+        font-family: sans-serif;
+        font-size: 96px;
+        user-select: none;
       }
     </style>
   </head>
-  <body></body>
+  <body>
+    <h1 id="area-cnt">NaN</h1>
+  </body>
   <script src="js/jquery.js"></script>
   <script>
-    const $body = $(document.body);
-    for (let i = 0; i < 336; i++) {
-      $("<div class='led'>")
-        .appendTo($body)
-        .css(
-          "background-color",
-          "#" +
-            Math.floor(0xffffff * Math.random())
-              .toString(16)
-              .padStart(6, "0"),
-        );
+    function factors(n) {
+      const ans = [];
+      for (let small = 1; small < Math.ceil(Math.sqrt(n)); small++) {
+        const big = n / small;
+        const bigIsInt = n % small === 0;
+        if (bigIsInt) {
+          ans.push([small, big]);
+        }
+      }
+      return ans;
     }
+
+    function findBestArrangement(areaCnt, desiredRatio = 16 / 9) {
+      const [wmin, wmax] = factors(areaCnt)
+        .map(([s, b]) => [s, b, Math.abs(desiredRatio - b / s)])
+        .reduce(
+          (best, alternative) => {
+            const [, , thisDiff] = alternative;
+            const [, , bestDiff] = best;
+            if (thisDiff < bestDiff) {
+              return alternative;
+            }
+            return best;
+          },
+          [NaN, NaN, Infinity],
+        );
+      return [wmax, wmin];
+    }
+
+    const areaCntDemoState = new (function () {
+      const COMMON_AREA_CNT = [
+        336, 384, 1152, 576, 2304, 1196, 896,
+        // (1920 * 1080) / 256,
+      ].toSorted((a, b) => a - b);
+      const cnt = COMMON_AREA_CNT.length;
+      this.current = 0;
+      this.getAreaCnt = () => COMMON_AREA_CNT[this.current];
+      this.next = () => (this.current = (this.current + 1 + cnt) % cnt);
+
+      this.__locked = false;
+      this.lock = function () {
+        this.__locked = true;
+      };
+      this.unlock = function () {
+        this.__locked = false;
+      };
+      this.locked = function () {
+        return this.__locked;
+      };
+    })();
+
+    const AREA_CNT = 336;
+    const $body = $(document.body);
+    const $showArenaCnt = $("#area-cnt");
+    function updateGrid(area_cnt) {
+      const [cols, rows] = findBestArrangement(area_cnt);
+      $body.css({
+        "grid-template-rows": `repeat(${rows}, 1fr)`,
+        "grid-template-columns": `repeat(${cols}, 1fr)`,
+      });
+      $body.children("div.area").remove();
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          $("<div class='area'>")
+            .appendTo($body)
+            .css(
+              "background-color",
+              (x % 2 === 0) ^ (y % 2 === 1) ? "black" : "white",
+            );
+        }
+      }
+      document.title = document.title.replace(/\d+/, area_cnt);
+      $showArenaCnt.text(area_cnt);
+    }
+
+    updateGrid(AREA_CNT);
+    $body.on("click", () => {
+      if (areaCntDemoState.locked()) {
+        return;
+      }
+      areaCntDemoState.next();
+      areaCntDemoState.lock();
+      updateGrid(areaCntDemoState.getAreaCnt());
+      areaCntDemoState.unlock();
+    });
   </script>
 </html>
