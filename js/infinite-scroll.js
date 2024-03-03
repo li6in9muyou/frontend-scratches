@@ -99,19 +99,16 @@ export default function addInfiniteScrollEffect(list, getItem, options) {
       this.obBack.observe(items.eq(-1)[0]);
     };
 
-    this.__helperAddManyItems = (
-      cnt,
-      idempotentGetNextKey,
-      afterListItemIsCreated,
-    ) => {
+    this.__helperAddManyItems = (cnt, getBatchKeys, handleEvent) => {
       this.isLoading = true;
 
       const batchGetItem = new Map();
       const loadingPlaceholders = new Map();
       const allItemLoaded = new WaitGroup();
-      for (let i = 0; i < cnt; i++) {
+      const batchKeys = getBatchKeys(cnt);
+      let successCnt = 0;
+      for (const key of batchKeys) {
         allItemLoaded.add();
-        const key = idempotentGetNextKey();
 
         const loading = this.getLoading(key);
         // todo: what if getItem throws or fails
@@ -126,32 +123,44 @@ export default function addInfiniteScrollEffect(list, getItem, options) {
 
         const ifHaveToWaitGetItem = typeof item.then === "function";
         if (ifHaveToWaitGetItem) {
-          afterListItemIsCreated(loading, key);
+          handleEvent("created", loading, key);
           waitGetItem.then((item) => {
+            allItemLoaded.done();
             let returnValue;
             if (item !== NoItem) {
               const $item = $(item);
               returnValue = $item;
-              allItemLoaded.done();
               $item.attr("data-ifs-key", key);
               $item.insertAfter(loading);
+              successCnt += 1;
+              handleEvent("success", $item, key);
             } else {
               returnValue = NoItem;
+              handleEvent("no-item", null, key);
             }
             loading.remove();
             return returnValue;
           });
         } else {
+          handleEvent("created", loading, key);
+          allItemLoaded.done();
           if (item !== NoItem) {
-            allItemLoaded.done();
-            $(item).attr("data-ifs-key", key);
-            afterListItemIsCreated(item, key);
+            const $item = $(item);
+            $item.attr("data-ifs-key", key);
+            handleEvent("success", $item, key);
+            successCnt += 1;
+          } else {
+            handleEvent("no-item", null, key);
           }
         }
       }
 
       const w = allItemLoaded.wait();
       w.then(() => (this.isLoading = false)).then(() => {
+        if (successCnt === 0) {
+          return;
+        }
+
         const items = this.$list.children("[data-ifs-key]");
         items.each((_, item) => {
           this.obFront.unobserve(item);
@@ -171,10 +180,23 @@ export default function addInfiniteScrollEffect(list, getItem, options) {
     this.addFrontManyItems = (cnt = this.PRELOAD_ITEM_COUNT) => {
       const { wait, loading } = this.__helperAddManyItems(
         cnt,
-        () => this.keyFront - 1,
-        ($listItem, key) => {
-          this.$list.prepend($listItem);
-          this.keyFront = key;
+        (cnt) => {
+          const ans = [];
+          let key = this.keyFront - 1;
+          for (let i = 0; i < cnt; i++) {
+            ans.push(key--);
+          }
+          return ans;
+        },
+        (event, $listItem, key) => {
+          switch (event) {
+            case "created":
+              this.$list.prepend($listItem);
+              break;
+            case "success":
+              this.keyFront = key;
+              break;
+          }
         },
       );
       // todo: changing initValue to -18 makes key=0 item stay perfectly still, but I don't know how to compute this value
@@ -195,10 +217,25 @@ export default function addInfiniteScrollEffect(list, getItem, options) {
     this.addBackManyItems = (cnt = this.PRELOAD_ITEM_COUNT) => {
       const { wait: waitAllLoaded } = this.__helperAddManyItems(
         cnt,
-        () => (Number.isNaN(this.keyBack) ? 0 : this.keyBack + 1),
-        ($listItem, key) => {
-          this.$list.append($listItem);
-          this.keyBack = key;
+        (cnt) => {
+          const ans = [];
+          if (Number.isNaN(this.keyBack)) {
+            ans.push(0);
+          }
+          while (ans.length < cnt) {
+            ans.push(ans.length);
+          }
+          return ans;
+        },
+        (event, $listItem, key) => {
+          switch (event) {
+            case "created":
+              this.$list.append($listItem);
+              break;
+            case "success":
+              this.keyBack = key;
+              break;
+          }
         },
       );
       waitAllLoaded.then(() =>
