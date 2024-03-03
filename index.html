@@ -38,6 +38,8 @@
       );
     }
 
+    const sleep = (milliseconds) => resolveAfter(milliseconds, null);
+
     function* genNumbers(start, cnt, step = 1) {
       for (let i = 0; i < cnt; i++) {
         yield start + step * i;
@@ -50,9 +52,15 @@
     });
   </script>
   <script type="module">
-    import addInfiniteScrollEffect from "./js/infinite-scroll.js";
+    import addInfiniteScrollEffect, { NoItem } from "./js/infinite-scroll.js";
 
     addInfiniteScrollEffect($("main"), (key) => {
+      if (key < 0) {
+        return sleep(200).then(() => NoItem);
+      }
+      if (key > 10) {
+        return sleep(200).then(() => NoItem);
+      }
       const $c = $(`<div class="content">${key}</div>`);
       $c.css("height", Math.round(100 + 200 * Math.random()));
       return resolveAfter(1000 + 1000 * Math.random(), $c);

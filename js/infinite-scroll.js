@@ -99,7 +99,11 @@ export default function addInfiniteScrollEffect(list, getItem, options) {
       this.obBack.observe(items.eq(-1)[0]);
     };
 
-    this.__helperAddManyItems = (cnt, getNextKey, listModifier) => {
+    this.__helperAddManyItems = (
+      cnt,
+      idempotentGetNextKey,
+      afterListItemIsCreated,
+    ) => {
       this.isLoading = true;
 
       const batchGetItem = new Map();
@@ -107,7 +111,7 @@ export default function addInfiniteScrollEffect(list, getItem, options) {
       const allItemLoaded = new WaitGroup();
       for (let i = 0; i < cnt; i++) {
         allItemLoaded.add();
-        const key = getNextKey();
+        const key = idempotentGetNextKey();
 
         const loading = this.getLoading(key);
         // todo: what if getItem throws or fails
@@ -122,23 +126,27 @@ export default function addInfiniteScrollEffect(list, getItem, options) {
 
         const ifHaveToWaitGetItem = typeof item.then === "function";
         if (ifHaveToWaitGetItem) {
-          waitGetItem
-            .then((item) => $(item))
-            .then(($item) => {
+          afterListItemIsCreated(loading, key);
+          waitGetItem.then((item) => {
+            let returnValue;
+            if (item !== NoItem) {
+              const $item = $(item);
+              returnValue = $item;
               allItemLoaded.done();
               $item.attr("data-ifs-key", key);
-              return $item;
-            })
-            .then(($item) => {
               $item.insertAfter(loading);
-              loading.remove();
-              return $item;
-            });
-          listModifier(loading);
+            } else {
+              returnValue = NoItem;
+            }
+            loading.remove();
+            return returnValue;
+          });
         } else {
-          allItemLoaded.done();
-          $(item).attr("data-ifs-key", key);
-          listModifier(item);
+          if (item !== NoItem) {
+            allItemLoaded.done();
+            $(item).attr("data-ifs-key", key);
+            afterListItemIsCreated(item, key);
+          }
         }
       }
 
@@ -163,11 +171,11 @@ export default function addInfiniteScrollEffect(list, getItem, options) {
     this.addFrontManyItems = (cnt = this.PRELOAD_ITEM_COUNT) => {
       const { wait, loading } = this.__helperAddManyItems(
         cnt,
-        () => {
-          this.keyFront -= 1;
-          return this.keyFront;
+        () => this.keyFront - 1,
+        ($listItem, key) => {
+          this.$list.prepend($listItem);
+          this.keyFront = key;
         },
-        this.$list.prepend.bind(this.$list),
       );
       // todo: changing initValue to -18 makes key=0 item stay perfectly still, but I don't know how to compute this value
       this.$list.scrollTop(
@@ -187,16 +195,11 @@ export default function addInfiniteScrollEffect(list, getItem, options) {
     this.addBackManyItems = (cnt = this.PRELOAD_ITEM_COUNT) => {
       const { wait: waitAllLoaded } = this.__helperAddManyItems(
         cnt,
-        () => {
-          if (Number.isNaN(this.keyBack)) {
-            this.keyBack = 0;
-            return this.keyBack;
-          } else {
-            this.keyBack++;
-          }
-          return this.keyBack;
+        () => (Number.isNaN(this.keyBack) ? 0 : this.keyBack + 1),
+        ($listItem, key) => {
+          this.$list.append($listItem);
+          this.keyBack = key;
         },
-        this.$list.append.bind(this.$list),
       );
       waitAllLoaded.then(() =>
         this.__helperRemoveManyItems(
@@ -210,3 +213,5 @@ export default function addInfiniteScrollEffect(list, getItem, options) {
     this.addBackManyItems(this.INIT_ITEM_COUNT);
   })();
 }
+
+export const NoItem = 112233445566;
