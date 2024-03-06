@@ -56,14 +56,14 @@
 
     addInfiniteScrollEffect($("main"), (key) => {
       if (key < 0) {
-        return sleep(200).then(() => NoItem);
+        return NoItem;
       }
       if (key > 10) {
-        return sleep(200).then(() => NoItem);
+        return NoItem;
       }
       const $c = $(`<div class="content">${key}</div>`);
       $c.css("height", Math.round(100 + 200 * Math.random()));
-      return resolveAfter(1000 + 1000 * Math.random(), $c);
+      return $c;
     });
   </script>
 </html>
