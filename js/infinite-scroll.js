@@ -166,8 +166,10 @@ export default function addInfiniteScrollEffect(list, getItem, options) {
           this.obFront.unobserve(item);
           this.obBack.unobserve(item);
         });
-        this.obFront.observe(items.eq(0)[0]);
-        this.obBack.observe(items.eq(-1)[0]);
+        if (items.length > 0) {
+          this.obFront.observe(items.eq(0)[0]);
+          this.obBack.observe(items.eq(-1)[0]);
+        }
       });
 
       return {
