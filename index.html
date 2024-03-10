@@ -93,6 +93,20 @@
     const AREA_CNT = 336;
     const $body = $(document.body);
     const $showArenaCnt = $("#area-cnt");
+
+    const COLOR_BLACK = "rgb(0, 0, 0)";
+    function flipColor() {
+      $(".area").each(function () {
+        const a = $(this);
+        const newColor =
+          a.css("background-color") === COLOR_BLACK ? "white" : "black";
+        console.log("newColor", newColor);
+        console.log('a.css("background-color")', a.css("background-color"));
+        a.css("background-color", newColor);
+      });
+    }
+    setInterval(flipColor, 1000);
+
     function updateGrid(area_cnt) {
       const [cols, rows] = findBestArrangement(area_cnt);
       $body.css({
