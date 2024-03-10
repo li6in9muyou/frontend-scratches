@@ -6,137 +6,43 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
-      html,
       body {
-        height: 100vh;
-        width: 100vw;
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        background-color: black;
-        color: white;
-        display: grid;
         position: relative;
+        background-color: black;
+        margin: 0;
       }
-      #area-cnt {
+
+      .taskbar {
+        width: 10vw;
         position: absolute;
-        text-align: center;
-        vertical-align: middle;
-        line-height: 100vh;
+        top: 0;
+        height: 100vh;
+        background-color: #101010;
+      }
+
+      .taskbar::after {
+        content: "aoc u27u2ds Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusamus aliquam atque deleniti dicta dignissimos doloremque, enim et expedita id impedit in magnam minus necessitatibus obcaecati quasi quisquam reprehenderit voluptatem voluptatibus!";
+        color: white;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 30px 30px;
+        font-size: 0.5rem;
+        line-height: 0.8rem;
+      }
+
+      .taskbar__left {
         left: 0;
+      }
+
+      .taskbar__right {
         right: 0;
-        margin: auto;
-        color: limegreen;
-        font-family: sans-serif;
-        font-size: 96px;
-        user-select: none;
       }
     </style>
   </head>
   <body>
-    <h1 id="area-cnt">NaN</h1>
+    <div class="taskbar taskbar__left"></div>
+    <div class="taskbar taskbar__right"></div>
   </body>
-  <script src="js/jquery.js"></script>
-  <script>
-    function factors(n) {
-      const ans = [];
-      for (let small = 1; small < Math.ceil(Math.sqrt(n)); small++) {
-        const big = n / small;
-        const bigIsInt = n % small === 0;
-        if (bigIsInt) {
-          ans.push([small, big]);
-        }
-      }
-      return ans;
-    }
-
-    function findBestArrangement(areaCnt, desiredRatio = 16 / 9) {
-      const [wmin, wmax] = factors(areaCnt)
-        .map(([s, b]) => [s, b, Math.abs(desiredRatio - b / s)])
-        .reduce(
-          (best, alternative) => {
-            const [, , thisDiff] = alternative;
-            const [, , bestDiff] = best;
-            if (thisDiff < bestDiff) {
-              return alternative;
-            }
-            return best;
-          },
-          [NaN, NaN, Infinity],
-        );
-      return [wmax, wmin];
-    }
-
-    const areaCntDemoState = new (function () {
-      const COMMON_AREA_CNT = [
-        336, 384, 1152, 576, 2304, 1196, 896,
-        // (1920 * 1080) / 256,
-      ].toSorted((a, b) => a - b);
-      const cnt = COMMON_AREA_CNT.length;
-      this.current = 0;
-      this.getAreaCnt = () => COMMON_AREA_CNT[this.current];
-      this.next = () => (this.current = (this.current + 1 + cnt) % cnt);
-
-      this.__locked = false;
-      this.lock = function () {
-        this.__locked = true;
-      };
-      this.unlock = function () {
-        this.__locked = false;
-      };
-      this.locked = function () {
-        return this.__locked;
-      };
-    })();
-
-    const AREA_CNT = 336;
-    const $body = $(document.body);
-    const $showArenaCnt = $("#area-cnt");
-
-    const COLOR_BLACK = "rgb(0, 0, 0)";
-    function flipColor() {
-      $(".area").each(function () {
-        const a = $(this);
-        const newColor =
-          a.css("background-color") === COLOR_BLACK ? "white" : "black";
-        console.log("newColor", newColor);
-        console.log('a.css("background-color")', a.css("background-color"));
-        a.css("background-color", newColor);
-      });
-    }
-    setInterval(flipColor, 1000);
-
-    function updateGrid(area_cnt) {
-      const [cols, rows] = findBestArrangement(area_cnt);
-      $body.css({
-        "grid-template-rows": `repeat(${rows}, 1fr)`,
-        "grid-template-columns": `repeat(${cols}, 1fr)`,
-      });
-      $body.children("div.area").remove();
-      for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-          $("<div class='area'>")
-            .appendTo($body)
-            .css(
-              "background-color",
-              (x % 2 === 0) ^ (y % 2 === 1) ? "black" : "white",
-            );
-        }
-      }
-      document.title = document.title.replace(/\d+/, area_cnt);
-      $showArenaCnt.text(area_cnt);
-    }
-
-    updateGrid(AREA_CNT);
-    $body.on("click", () => {
-      if (areaCntDemoState.locked()) {
-        return;
-      }
-      areaCntDemoState.next();
-      areaCntDemoState.lock();
-      updateGrid(areaCntDemoState.getAreaCnt());
-      areaCntDemoState.unlock();
-    });
-  </script>
 </html>
