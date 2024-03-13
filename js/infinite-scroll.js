@@ -1,3 +1,9 @@
+const T = {
+  okItem: "ok-item",
+  noItem: "no-item",
+  batchEnd: "batch-end",
+};
+
 function Ifs(
   list,
   getItem,
@@ -83,13 +89,14 @@ function Ifs(
       if (item !== NoItem) {
         const $item = $(item);
         $item.attr("data-ifs-key", key);
-        handleEvent("success", $item, key);
+        handleEvent(T.okItem, $item, key);
         successCnt += 1;
       } else {
-        handleEvent("no-item", null, key);
+        handleEvent(T.noItem, null, key);
       }
     }
 
+    handleEvent(T.batchEnd, successCnt);
     if (successCnt === 0) {
       return;
     }
@@ -121,7 +128,7 @@ function Ifs(
       (event, ...args) => {
         console.log("addFront event, args", event, args);
         switch (event) {
-          case "success":
+          case T.okItem:
             const [$listItem, key] = args;
             this.$list.prepend($listItem);
             this.keyFront = key;
@@ -154,7 +161,7 @@ function Ifs(
       (event, ...args) => {
         console.log("addBack event, args", event, args);
         switch (event) {
-          case "success":
+          case T.okItem:
             const [$listItem, key] = args;
             this.$list.append($listItem);
             this.keyBack = key;
