@@ -140,12 +140,12 @@ function Ifs(
     this.__helperAddManyItems(
       cnt,
       (cnt) => {
+        const start = Number.isNaN(this.keyBack) ? 0 : this.keyBack + 1;
+
         const ans = [];
-        if (Number.isNaN(this.keyBack)) {
-          ans.push(0);
-        }
-        while (ans.length < cnt) {
-          ans.push(ans.length);
+        ans.push(start);
+        for (let i = 0; i < cnt; i++) {
+          ans.push(start + i);
         }
         return ans;
       },
