@@ -112,9 +112,9 @@ function Ifs(
       cnt,
       (cnt) => {
         const ans = [];
-        let key = this.keyFront - 1;
+        const start = this.keyFront - 1;
         for (let i = 0; i < cnt; i++) {
-          ans.push(key--);
+          ans.push(start - i);
         }
         return ans;
       },
