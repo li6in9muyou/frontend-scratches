@@ -118,9 +118,11 @@ function Ifs(
         }
         return ans;
       },
-      (event, $listItem, key) => {
+      (event, ...args) => {
+        console.log("addFront event, args", event, args);
         switch (event) {
           case "success":
+            const [$listItem, key] = args;
             this.$list.prepend($listItem);
             this.keyFront = key;
             this.__helperRemoveManyItems(
@@ -149,9 +151,11 @@ function Ifs(
         }
         return ans;
       },
-      (event, $listItem, key) => {
+      (event, ...args) => {
+        console.log("addBack event, args", event, args);
         switch (event) {
           case "success":
+            const [$listItem, key] = args;
             this.$list.append($listItem);
             this.keyBack = key;
             this.__helperRemoveManyItems(
