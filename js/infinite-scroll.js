@@ -128,6 +128,9 @@ function Ifs(
               () => this.keyBack--,
             );
             break;
+          default:
+            console.warn("addFrontManyItems: unexpected event", event, args);
+            break;
         }
       },
     );
@@ -155,6 +158,9 @@ function Ifs(
               this.getExcessiveItemCnt(),
               () => this.keyFront++,
             );
+            break;
+          default:
+            console.warn("addBackManyItems: unexpected event", event, args);
             break;
         }
       },
