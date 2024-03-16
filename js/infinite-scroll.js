@@ -152,7 +152,6 @@ function Ifs(
         const start = Number.isNaN(this.keyBack) ? 0 : this.keyBack + 1;
 
         const ans = [];
-        ans.push(start);
         for (let i = 0; i < cnt; i++) {
           ans.push(start + i);
         }
