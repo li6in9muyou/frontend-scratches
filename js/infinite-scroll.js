@@ -148,7 +148,7 @@ function Ifs(
     let waitAllItemResolved = null;
     const batchKeys = getBatchKeys(cnt);
     for (const key of batchKeys) {
-      // todo: what if getItem throws or fails
+      // todo: what if getItem throws or fails or simply returns null
       eventHandler.onStart(key);
       const item = this.getItem(key);
       const isItemPromise = typeof item.then === "function";
