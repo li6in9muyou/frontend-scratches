@@ -67,7 +67,7 @@ function Ifs(
   this.obBack = new IntersectionObserver(
     (entries) => {
       console.assert(
-        entries.length === 1,
+        new Set(entries.map((e) => e.target)).size === 1,
         "multiple observation targets in this.obBack",
       );
       const back = entries[0];
