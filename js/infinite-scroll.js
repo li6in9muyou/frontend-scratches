@@ -76,17 +76,23 @@ function Ifs(
   };
 
   this.__helperAddManyItems = (cnt, getBatchKeys, eventHandler) => {
-    const batchKeys = getBatchKeys(cnt);
-    let successCnt = 0;
-    for (const key of batchKeys) {
-      // todo: what if getItem throws or fails
-      eventHandler.onStart(key);
-      const item = this.getItem(key);
+    const handleBatchIsFinished = (item) => {
+      const items = this.$list.children("[data-ifs-key]");
+      items.each((_, item) => {
+        this.obFront.unobserve(item);
+        this.obBack.unobserve(item);
+      });
+      if (items.length > 0) {
+        this.obFront.observe(items.eq(0)[0]);
+        this.obBack.observe(items.eq(-1)[0]);
+      }
+    };
+
+    function handleItemIsResolved(item) {
       console.assert(
         !!item,
         `infinite-scroll: invalid item !!item = false, key = ${key}`,
       );
-
       if (item !== NoItem) {
         const $item = $(item);
         $item.attr("data-ifs-key", key);
@@ -97,19 +103,20 @@ function Ifs(
       }
     }
 
+    const batchKeys = getBatchKeys(cnt);
+    let successCnt = 0;
+    for (const key of batchKeys) {
+      // todo: what if getItem throws or fails
+      eventHandler.onStart(key);
+      const item = this.getItem(key);
+      handleItemIsResolved(key, item);
+    }
+
     if (successCnt === 0) {
       return;
     }
 
-    const items = this.$list.children("[data-ifs-key]");
-    items.each((_, item) => {
-      this.obFront.unobserve(item);
-      this.obBack.unobserve(item);
-    });
-    if (items.length > 0) {
-      this.obFront.observe(items.eq(0)[0]);
-      this.obBack.observe(items.eq(-1)[0]);
-    }
+    handleBatchIsFinished();
 
     return {};
   };
