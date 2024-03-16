@@ -48,6 +48,7 @@ function Ifs(
   this.getItem = getItem;
   this.keyFront = 0;
   this.keyBack = NaN;
+  this.batchIsLoading = false;
   this.obFront = new IntersectionObserver(
     (entries) => {
       console.assert(
@@ -108,7 +109,9 @@ function Ifs(
   };
 
   this.__helperAddManyItems = (cnt, getBatchKeys, eventHandler) => {
-    const handleBatchIsFinished = (item) => {
+    const handleBatchIsFinished = (...args) => {
+      eventHandler.onBatchFinish(...args);
+      this.batchIsLoading = false;
       const items = this.$list.children("[data-ifs-key]");
       items.each((_, item) => {
         this.obFront.unobserve(item);
@@ -129,23 +132,30 @@ function Ifs(
         const $item = $(item);
         $item.attr("data-ifs-key", key);
         eventHandler.onOk($item, key);
-        successCnt += 1;
+        okKeys.push(key);
       } else {
         eventHandler.onBad(key);
+        badKeys.push(key);
       }
     }
+    if (this.batchIsLoading) {
+      return;
+    }
 
+    const okKeys = [];
+    const badKeys = [];
     let getItemHasAsync = false;
     let waitAllItemResolved = null;
     const batchKeys = getBatchKeys(cnt);
-    let successCnt = 0;
     for (const key of batchKeys) {
       // todo: what if getItem throws or fails
       eventHandler.onStart(key);
       const item = this.getItem(key);
       const isItemPromise = typeof item.then === "function";
+      console.log("key, ite, isItemPromise", key, item, isItemPromise);
 
       if (isItemPromise) {
+        this.batchIsLoading = true;
         const $loading = this.getLoading();
         getItemHasAsync = true;
         if (waitAllItemResolved === null) {
@@ -162,17 +172,15 @@ function Ifs(
       }
     }
 
-    if (successCnt === 0) {
-      return;
-    }
-
     if (getItemHasAsync) {
-      waitAllItemResolved.wait().then(handleBatchIsFinished);
+      waitAllItemResolved
+        .wait()
+        .then(() => handleBatchIsFinished(okKeys, badKeys));
       return {
         wait: waitAllItemResolved.wait(),
       };
     } else {
-      handleBatchIsFinished();
+      handleBatchIsFinished(okKeys, badKeys);
       return {};
     }
   };
@@ -181,14 +189,15 @@ function Ifs(
     onStart: () => {},
     onOk: () => {},
     onBad: () => {},
+    onBatchFinish: () => {},
   };
 
   this.addFrontManyItems = (cnt = this.PRELOAD_ITEM_COUNT) => {
+    const start = this.keyFront - 1;
     this.__helperAddManyItems(
       cnt,
       (cnt) => {
         const ans = [];
-        const start = this.keyFront - 1;
         for (let i = 0; i < cnt; i++) {
           ans.push(start - i);
         }
@@ -196,9 +205,13 @@ function Ifs(
       },
       {
         ...noopHandler,
-        onOk: ($listItem, key) => {
+        onBatchFinish: (okKeys) => {
+          console.log("addFront onBatchFinish");
+          console.log("this.keyFront, okKeys", this.keyFront, okKeys);
+          this.keyFront = start - (okKeys.length - 1);
+        },
+        onOk: ($listItem) => {
           this.$list.prepend($listItem);
-          this.keyFront = key;
           this.__helperRemoveManyItems(
             this.getExcessiveItemCnt(),
             () => this.keyBack--,
@@ -209,11 +222,10 @@ function Ifs(
   };
 
   this.addBackManyItems = (cnt = this.PRELOAD_ITEM_COUNT) => {
+    const start = Number.isNaN(this.keyBack) ? 0 : this.keyBack + 1;
     this.__helperAddManyItems(
       cnt,
       (cnt) => {
-        const start = Number.isNaN(this.keyBack) ? 0 : this.keyBack + 1;
-
         const ans = [];
         for (let i = 0; i < cnt; i++) {
           ans.push(start + i);
@@ -222,9 +234,13 @@ function Ifs(
       },
       {
         ...noopHandler,
-        onOk: ($listItem, key) => {
+        onBatchFinish: (okKeys) => {
+          console.log("addBack onBatchFinish");
+          console.log("this.keyBack, okKeys", this.keyBack, okKeys);
+          this.keyBack = start + (okKeys.length - 1);
+        },
+        onOk: ($listItem) => {
           this.$list.append($listItem);
-          this.keyBack = key;
           this.__helperRemoveManyItems(
             this.getExcessiveItemCnt(),
             () => this.keyFront++,
