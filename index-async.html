@@ -45,7 +45,7 @@
     import addInfiniteScrollEffect, { NoItem } from "./js/infinite-scroll.js";
 
     addInfiniteScrollEffect($("main"), (key) => {
-      if (key < 0) {
+      if (key < -10) {
         return NoItem;
       }
       if (key > 10) {
