@@ -154,6 +154,7 @@ function Ifs(
       if (isItemPromise) {
         this.batchIsLoading = true;
         const $loading = this.getLoading();
+        eventHandler.onInsertLoading($loading, key);
         getItemHasAsync = true;
         if (waitAllItemResolved === null) {
           waitAllItemResolved = new WaitGroup();
@@ -162,6 +163,7 @@ function Ifs(
         item.then(($item) => {
           handleItemIsResolved(key, $item);
           waitAllItemResolved.done();
+          $item.insertAfter($loading);
           $loading.remove();
         });
       } else {
@@ -184,6 +186,7 @@ function Ifs(
 
   const noopHandler = {
     onStart: () => {},
+    onInsertLoading: () => {},
     onOk: () => {},
     onBad: () => {},
     onBatchFinish: () => {},
@@ -206,6 +209,9 @@ function Ifs(
           console.log("addFront onBatchFinish");
           console.log("this.keyFront, okKeys", this.keyFront, okKeys);
           this.keyFront = start - (okKeys.length - 1);
+        },
+        onInsertLoading: ($loading) => {
+          this.$list.prepend($loading);
         },
         onOk: ($listItem) => {
           this.$list.prepend($listItem);
@@ -235,6 +241,9 @@ function Ifs(
           console.log("addBack onBatchFinish");
           console.log("this.keyBack, okKeys", this.keyBack, okKeys);
           this.keyBack = start + (okKeys.length - 1);
+        },
+        onInsertLoading: ($loading) => {
+          this.$list.append($loading);
         },
         onOk: ($listItem) => {
           this.$list.append($listItem);
