@@ -43,48 +43,33 @@ function Ifs(
   this.keyFront = 0;
   this.keyBack = NaN;
   this.batchIsLoading = false;
-  this.obFront = new IntersectionObserver(
-    (entries) => {
-      console.assert(
-        entries.length === 1,
-        "multiple observation targets in this.obFront",
-      );
-      const front = entries[0];
-      console.log(
-        "this.obFront:" + $(front.target).attr("data-ifs-key"),
-        front.intersectionRatio,
-      );
-      if (front.intersectionRatio > 0.75) {
-        this.addFrontManyItems(this.PRELOAD_ITEM_COUNT);
-      }
-    },
-    {
-      root: this.$list[0] ?? this.$list,
-      rootMargin: "0px",
-      threshold: [0.75],
-    },
-  );
-  this.obBack = new IntersectionObserver(
-    (entries) => {
-      console.assert(
-        new Set(entries.map((e) => e.target)).size === 1,
-        "multiple observation targets in this.obBack",
-      );
-      const back = entries[0];
-      console.log(
-        "this.obBack:" + $(back.target).attr("data-ifs-key"),
-        back.intersectionRatio,
-      );
-      if (back.intersectionRatio > 0.75) {
-        this.addBackManyItems(this.PRELOAD_ITEM_COUNT);
-      }
-    },
-    {
-      root: this.$list[0] ?? this.$list,
-      rootMargin: "0px",
-      threshold: [0.75],
-    },
-  );
+
+  const buildExpandListTrigger = (addItemFn) => {
+    return new IntersectionObserver(
+      (entries) => {
+        console.assert(
+          new Set(entries.map((e) => e.target)).size === 1,
+          "multiple observation targets in this observer",
+        );
+        const front = entries[0];
+        console.log(
+          "this.obKey: " + $(front.target).attr("data-ifs-key"),
+          front.intersectionRatio,
+        );
+        if (front.intersectionRatio > 0.75) {
+          addItemFn(this.PRELOAD_ITEM_COUNT);
+        }
+      },
+      {
+        root: this.$list[0] ?? this.$list,
+        rootMargin: "0px",
+        threshold: [0.75],
+      },
+    );
+  };
+  this.obFront = buildExpandListTrigger(this.addFrontManyItems.bind(this));
+  this.obBack = buildExpandListTrigger(this.addBackManyItems.bind(this));
+
   this.getExcessiveItemCnt = () =>
     this.keyBack - this.keyFront - this.MAX_ITEM_COUNT + 1;
 
