@@ -2,7 +2,7 @@
 
 ## expected behaviour of infinite scroll
 
-|       | start                          | ok                                                                            | bad            |
-| ----- | ------------------------------ | ----------------------------------------------------------------------------- | -------------- |
-| sync  | do nothing                     | insert item;update keyFront/keyBack;update intersect observer;                | do nothing     |
-| async | insert loading;set up waiters; | remove loading;insert item;update keyFront/keyBack;update intersect observer; | remove loading |
+| emit  | start                                                          | ok                                                                            | bad            | finish                          |
+| ----- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------- | ------------------------------- |
+| sync  | do nothing                                                     | insert item;update keyFront/keyBack;update intersect observer;                | do nothing     | do nothing                      |
+| async | insert loading;set up waiters;lock to prevent more insertions; | remove loading;insert item;update keyFront/keyBack;update intersect observer; | remove loading | lock to permit more insertions; |
