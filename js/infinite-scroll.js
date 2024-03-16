@@ -44,32 +44,6 @@ function Ifs(
   this.keyBack = NaN;
   this.batchIsLoading = false;
 
-  const buildExpandListTrigger = (addItemFn) => {
-    return new IntersectionObserver(
-      (entries) => {
-        console.assert(
-          new Set(entries.map((e) => e.target)).size === 1,
-          "multiple observation targets in this observer",
-        );
-        const front = entries[0];
-        console.log(
-          "this.obKey: " + $(front.target).attr("data-ifs-key"),
-          front.intersectionRatio,
-        );
-        if (front.intersectionRatio > 0.75) {
-          addItemFn(this.PRELOAD_ITEM_COUNT);
-        }
-      },
-      {
-        root: this.$list[0] ?? this.$list,
-        rootMargin: "0px",
-        threshold: [0.75],
-      },
-    );
-  };
-  this.obFront = buildExpandListTrigger(this.addFrontManyItems.bind(this));
-  this.obBack = buildExpandListTrigger(this.addBackManyItems.bind(this));
-
   this.getExcessiveItemCnt = () =>
     this.keyBack - this.keyFront - this.MAX_ITEM_COUNT + 1;
 
@@ -240,6 +214,32 @@ function Ifs(
       },
     );
   };
+
+  const buildExpandListTrigger = (addItemFn) => {
+    return new IntersectionObserver(
+      (entries) => {
+        console.assert(
+          new Set(entries.map((e) => e.target)).size === 1,
+          "multiple observation targets in this observer",
+        );
+        const front = entries[0];
+        console.log(
+          "this.obKey: " + $(front.target).attr("data-ifs-key"),
+          front.intersectionRatio,
+        );
+        if (front.intersectionRatio > 0.75) {
+          addItemFn(this.PRELOAD_ITEM_COUNT);
+        }
+      },
+      {
+        root: this.$list[0] ?? this.$list,
+        rootMargin: "0px",
+        threshold: [0.75],
+      },
+    );
+  };
+  this.obFront = buildExpandListTrigger(this.addFrontManyItems.bind(this));
+  this.obBack = buildExpandListTrigger(this.addBackManyItems.bind(this));
 
   this.addBackManyItems(this.INIT_ITEM_COUNT);
 }
