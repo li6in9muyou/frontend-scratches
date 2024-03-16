@@ -103,17 +103,20 @@ function Ifs(
   };
 
   this.__helperAddManyItems = (cnt, getBatchKeys, eventHandler) => {
-    const handleBatchIsFinished = (...args) => {
-      eventHandler.onBatchFinish(...args);
+    const handleBatchIsFinished = (okKeys, badKeys) => {
+      eventHandler.onBatchFinish(okKeys, badKeys);
+
       this.batchIsLoading = false;
-      const items = this.$list.children("[data-ifs-key]");
-      items.each((_, item) => {
-        this.obFront.unobserve(item);
-        this.obBack.unobserve(item);
-      });
-      if (items.length > 0) {
-        this.obFront.observe(items.eq(0)[0]);
-        this.obBack.observe(items.eq(-1)[0]);
+      if (okKeys.length > 0) {
+        const items = this.$list.children("[data-ifs-key]");
+        items.each((_, item) => {
+          this.obFront.unobserve(item);
+          this.obBack.unobserve(item);
+        });
+        if (items.length > 0) {
+          this.obFront.observe(items.eq(0)[0]);
+          this.obBack.observe(items.eq(-1)[0]);
+        }
       }
     };
 
