@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <title>无穷滚动</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        background-color: black;
+        color: white;
+      }
+
+      main {
+        height: 654px;
+        border: solid 4px crimson;
+        overflow-y: auto;
+      }
+
+      .content {
+        height: 269px;
+        margin: 6px 6px 0 6px;
+        text-align: center;
+        background-color: mediumvioletred;
+        border: solid 2px white;
+        font-size: 90px;
+      }
+    </style>
+  </head>
+  <body>
+    <main></main>
+  </body>
+  <script src="js/jquery.js"></script>
+  <script>
+    function sleep(milliseconds) {
+      return new Promise((resolve) => setTimeout(resolve, milliseconds));
+    }
+  </script>
+  <script>
+    $(document).on("scroll wheel", (e) => {
+      console.log("document event", e.type, e);
+    });
+  </script>
+  <script type="module">
+    import addInfiniteScrollEffect, { NoItem } from "./js/infinite-scroll.js";
+
+    addInfiniteScrollEffect($("main"), (key) => {
+      if (key < 0) {
+        return NoItem;
+      }
+      if (key > 10) {
+        return NoItem;
+      }
+      const $c = $(`<div class="content">${key}</div>`);
+      $c.css("height", Math.round(100 + 200 * Math.random()));
+      return sleep(200 + 300 * Math.random()).then(() => $c);
+    });
+  </script>
+</html>

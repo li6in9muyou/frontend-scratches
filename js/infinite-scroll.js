@@ -4,6 +4,26 @@ const T = {
   batchEnd: "batch-end",
 };
 
+class WaitGroup {
+  constructor(init = 0) {
+    this.current = init;
+    this.allDone = null;
+    this.block = new Promise((resolve) => (this.allDone = resolve));
+  }
+  done() {
+    this.current -= 1;
+    if (this.current <= 0) {
+      this.allDone();
+    }
+  }
+  add(cnt = 1) {
+    this.current += cnt;
+  }
+  wait() {
+    return this.block;
+  }
+}
+
 function Ifs(
   list,
   getItem,
@@ -12,6 +32,18 @@ function Ifs(
   this.MAX_ITEM_COUNT = options?.maxLen ?? 10;
   this.INIT_ITEM_COUNT = options?.initLen ?? 6;
   this.PRELOAD_ITEM_COUNT = options?.preload ?? 3;
+  this.getLoading =
+    options?.getLoading ??
+    (() =>
+      $("<div>loading</div>").css({
+        "box-sizing": "border-box",
+        height: "269px",
+        margin: "6px",
+        "text-align": "center",
+        "background-color": "dimgray",
+        border: "solid 2px white",
+        "font-size": " 90px",
+      }));
   this.$list = $(list);
   this.getItem = getItem;
   this.keyFront = 0;
@@ -88,7 +120,7 @@ function Ifs(
       }
     };
 
-    function handleItemIsResolved(item) {
+    function handleItemIsResolved(key, item) {
       console.assert(
         !!item,
         `infinite-scroll: invalid item !!item = false, key = ${key}`,
@@ -103,22 +135,46 @@ function Ifs(
       }
     }
 
+    let getItemHasAsync = false;
+    let waitAllItemResolved = null;
     const batchKeys = getBatchKeys(cnt);
     let successCnt = 0;
     for (const key of batchKeys) {
       // todo: what if getItem throws or fails
       eventHandler.onStart(key);
       const item = this.getItem(key);
-      handleItemIsResolved(key, item);
+      const isItemPromise = typeof item.then === "function";
+
+      if (isItemPromise) {
+        const $loading = this.getLoading();
+        getItemHasAsync = true;
+        if (waitAllItemResolved === null) {
+          waitAllItemResolved = new WaitGroup();
+        }
+        waitAllItemResolved.add();
+        item.then(($item) => {
+          handleItemIsResolved(key, $item);
+          waitAllItemResolved.done();
+          $loading.remove();
+        });
+      } else {
+        handleItemIsResolved(key, item);
+      }
     }
 
     if (successCnt === 0) {
       return;
     }
 
-    handleBatchIsFinished();
-
-    return {};
+    if (getItemHasAsync) {
+      waitAllItemResolved.wait().then(handleBatchIsFinished);
+      return {
+        wait: waitAllItemResolved.wait(),
+      };
+    } else {
+      handleBatchIsFinished();
+      return {};
+    }
   };
 
   const noopHandler = {
