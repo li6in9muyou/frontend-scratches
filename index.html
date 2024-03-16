@@ -32,21 +32,6 @@
   </body>
   <script src="js/jquery.js"></script>
   <script>
-    function resolveAfter(milliseconds, result) {
-      return new Promise((resolve) =>
-        setTimeout(() => resolve(result), milliseconds),
-      );
-    }
-
-    const sleep = (milliseconds) => resolveAfter(milliseconds, null);
-
-    function* genNumbers(start, cnt, step = 1) {
-      for (let i = 0; i < cnt; i++) {
-        yield start + step * i;
-      }
-    }
-  </script>
-  <script>
     $(document).on("scroll wheel", (e) => {
       console.log("document event", e.type, e);
     });
