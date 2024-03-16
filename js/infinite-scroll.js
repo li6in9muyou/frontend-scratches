@@ -1,9 +1,3 @@
-const T = {
-  okItem: "ok-item",
-  noItem: "no-item",
-  batchEnd: "batch-end",
-};
-
 class WaitGroup {
   constructor(init = 0) {
     this.current = init;
