@@ -75,11 +75,12 @@ function Ifs(
     this.obBack.observe(items.eq(-1)[0]);
   };
 
-  this.__helperAddManyItems = (cnt, getBatchKeys, handleEvent) => {
+  this.__helperAddManyItems = (cnt, getBatchKeys, eventHandler) => {
     const batchKeys = getBatchKeys(cnt);
     let successCnt = 0;
     for (const key of batchKeys) {
       // todo: what if getItem throws or fails
+      eventHandler.onStart(key);
       const item = this.getItem(key);
       console.assert(
         !!item,
@@ -89,14 +90,13 @@ function Ifs(
       if (item !== NoItem) {
         const $item = $(item);
         $item.attr("data-ifs-key", key);
-        handleEvent(T.okItem, $item, key);
+        eventHandler.onOk($item, key);
         successCnt += 1;
       } else {
-        handleEvent(T.noItem, null, key);
+        eventHandler.onBad(key);
       }
     }
 
-    handleEvent(T.batchEnd, successCnt);
     if (successCnt === 0) {
       return;
     }
@@ -114,6 +114,12 @@ function Ifs(
     return {};
   };
 
+  const noopHandler = {
+    onStart: () => {},
+    onOk: () => {},
+    onBad: () => {},
+  };
+
   this.addFrontManyItems = (cnt = this.PRELOAD_ITEM_COUNT) => {
     this.__helperAddManyItems(
       cnt,
@@ -125,22 +131,16 @@ function Ifs(
         }
         return ans;
       },
-      (event, ...args) => {
-        console.log("addFront event, args", event, args);
-        switch (event) {
-          case T.okItem:
-            const [$listItem, key] = args;
-            this.$list.prepend($listItem);
-            this.keyFront = key;
-            this.__helperRemoveManyItems(
-              this.getExcessiveItemCnt(),
-              () => this.keyBack--,
-            );
-            break;
-          default:
-            console.warn("addFrontManyItems: unexpected event", event, args);
-            break;
-        }
+      {
+        ...noopHandler,
+        onOk: ($listItem, key) => {
+          this.$list.prepend($listItem);
+          this.keyFront = key;
+          this.__helperRemoveManyItems(
+            this.getExcessiveItemCnt(),
+            () => this.keyBack--,
+          );
+        },
       },
     );
   };
@@ -157,22 +157,16 @@ function Ifs(
         }
         return ans;
       },
-      (event, ...args) => {
-        console.log("addBack event, args", event, args);
-        switch (event) {
-          case T.okItem:
-            const [$listItem, key] = args;
-            this.$list.append($listItem);
-            this.keyBack = key;
-            this.__helperRemoveManyItems(
-              this.getExcessiveItemCnt(),
-              () => this.keyFront++,
-            );
-            break;
-          default:
-            console.warn("addBackManyItems: unexpected event", event, args);
-            break;
-        }
+      {
+        ...noopHandler,
+        onOk: ($listItem, key) => {
+          this.$list.append($listItem);
+          this.keyBack = key;
+          this.__helperRemoveManyItems(
+            this.getExcessiveItemCnt(),
+            () => this.keyFront++,
+          );
+        },
       },
     );
   };
