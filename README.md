@@ -30,16 +30,16 @@ stateDiagram-v2
 
 ```typescript
 type Event<T> = {
-    type: string,
-    data: T
-}
+  type: string;
+  data: T;
+};
 
 type TransitionEvent = Event<{
-    leaving: any,
-    entering: any,
-    event: any,
-    more: undefined | any[]
-}>
+  leaving: any;
+  entering: any;
+  event: any;
+  more: undefined | any[];
+}>;
 ```
 
 ## 警惕
