@@ -1,6 +1,6 @@
 # pull-to-refresh behaviour
 
-> 本项目已经移动到另一个仓库
+> 本项目已经移动到[li6in9muyou/big-homework-repo](https://github.com/li6in9muyou/big-homework-repo)
 
 # 下拉刷新效果
 
